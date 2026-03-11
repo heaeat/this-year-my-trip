@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>올해의 여행</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#fff;--bg-hover:#f7f7f5;--bg-sidebar:#fbfbfa;--text:#37352f;--text-sub:#787774;--text-muted:#b4b4b0;--border:#e9e9e7;--border-light:#f1f1ef;--accent:#2eaadc;--accent-bg:#e8f4f9;--green:#4dab60;--green-bg:#edf8ef;--orange:#d9730d;--orange-bg:#fdecd3;--red:#e03e3e;--red-bg:#fce4e4;--radius:6px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Noto Sans KR',-apple-system,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;line-height:1.5}
+button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inherit}
+::selection{background:var(--accent-bg)}
+
+.login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.login-box{text-align:center;max-width:320px;width:90%}
+.login-box .icon{font-size:48px;margin-bottom:20px}
+.login-box h1{font-size:26px;font-weight:700;letter-spacing:-1px;margin-bottom:6px}
+.login-box p{font-size:14px;color:var(--text-sub);margin-bottom:32px}
+.google-btn{display:inline-flex;align-items:center;gap:10px;padding:10px 24px;border-radius:8px;border:1px solid var(--border);background:#fff;font-size:14px;font-weight:500;color:var(--text);transition:all .15s}
+.google-btn:hover{background:var(--bg-hover)}.google-btn svg{width:18px;height:18px}
+
+.setup-screen{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.setup-box{max-width:420px;width:92%}.setup-box h2{font-size:20px;font-weight:700;margin-bottom:6px}
+.setup-box .desc{font-size:14px;color:var(--text-sub);margin-bottom:24px}.setup-actions{display:flex;gap:8px}
+
+.header{padding:12px 24px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border-light);background:#fff;position:sticky;top:0;z-index:50}
+.header-left{display:flex;align-items:center;gap:8px}.header-left .icon{font-size:20px}.header-left h1{font-size:16px;font-weight:600;letter-spacing:-.3px}
+.header-right{display:flex;align-items:center;gap:10px}.header-right img{width:26px;height:26px;border-radius:50%}.header-right .name{font-size:13px;color:var(--text-sub)}
+.logout-btn{padding:4px 10px;border-radius:var(--radius);border:1px solid var(--border);background:#fff;font-size:12px;color:var(--text-sub);transition:all .15s}.logout-btn:hover{background:var(--bg-hover)}
+
+.app-layout{display:grid;grid-template-columns:280px 1fr;min-height:calc(100vh - 50px)}
+
+.sidebar{border-right:1px solid var(--border-light);background:var(--bg-sidebar);padding:16px 14px;overflow-y:auto}
+.sidebar-label{font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;padding:0 6px;margin-bottom:8px}
+.trip-all{padding:10px 12px;border-radius:8px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .12s;margin-bottom:6px;font-size:14px;font-weight:500;color:var(--text-sub);border:none;width:100%;background:transparent;text-align:left}
+.trip-all:hover{background:#efefed}.trip-all.active{background:#e8e8e5;color:var(--text)}.trip-all .ico{font-size:20px}
+.trip-card{padding:14px 14px 12px;border-radius:10px;cursor:pointer;transition:all .15s;margin-bottom:6px;position:relative;background:#fff;border:1.5px solid var(--border-light);overflow:hidden}
+.trip-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:transparent;transition:background .15s;border-radius:10px 0 0 10px}
+.trip-card:hover{border-color:var(--border);box-shadow:0 2px 8px rgba(0,0,0,.04)}.trip-card:hover::before{background:var(--accent)}
+.trip-card.active{border-color:var(--accent);background:#f8fcfe;box-shadow:0 2px 12px rgba(46,170,220,.1)}.trip-card.active::before{background:var(--accent)}
+.trip-card .card-top{display:flex;align-items:flex-start;gap:12px}
+.trip-card .card-emoji{font-size:28px;line-height:1}.trip-card .card-info{flex:1;min-width:0}
+.trip-card .card-month{font-size:12px;font-weight:700;color:var(--accent);letter-spacing:-.2px;line-height:1}
+.trip-card .card-city{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.5px;margin-top:3px;line-height:1.2}
+.trip-card .card-dates{font-size:11px;color:var(--text-muted);margin-top:4px}
+.trip-card .card-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:9px;border-top:1px solid var(--border-light)}
+.trip-card .card-stats{display:flex;gap:8px;font-size:12px;color:var(--text-sub);align-items:center}
+.trip-card .card-money{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--text);letter-spacing:-.2px}
+.trip-card .card-progress{margin-top:8px;height:3px;border-radius:2px;background:var(--border-light);overflow:hidden}
+.trip-card .card-progress-fill{height:100%;border-radius:2px;background:var(--green);transition:width .4s}
+.trip-card .delete-trip{position:absolute;right:8px;top:8px;width:22px;height:22px;border-radius:5px;border:none;background:transparent;color:var(--text-muted);font-size:13px;display:none;align-items:center;justify-content:center}
+.trip-card:hover .delete-trip{display:flex}.trip-card .delete-trip:hover{background:var(--red-bg);color:var(--red)}
+.settle-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);flex-shrink:0}
+.add-trip-btn{padding:10px 12px;border-radius:8px;border:1.5px dashed var(--border);width:100%;text-align:center;font-size:14px;font-weight:500;background:transparent;color:var(--text-muted);margin-top:6px;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:6px}
+.add-trip-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+
+.main{padding:24px 32px 60px;max-width:960px}
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border-light);border:1px solid var(--border-light);border-radius:8px;overflow:hidden;margin-bottom:28px}
+.summary-card{background:#fff;padding:16px 18px}.summary-card .label{font-size:13px;color:var(--text-muted);margin-bottom:3px}
+.summary-card .value{font-size:19px;font-weight:700;letter-spacing:-.3px;font-variant-numeric:tabular-nums}
+.summary-card .value.green{color:var(--green)}.summary-card .value.orange{color:var(--orange)}.summary-card .value.red{color:var(--red)}
+
+.main-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.main-top h2{font-size:22px;font-weight:700;letter-spacing:-.5px}.main-top .sub{font-size:13px;color:var(--text-muted);margin-top:2px}
+.add-res-btn{padding:6px 14px;border-radius:var(--radius);border:1px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--text);transition:all .15s;display:flex;align-items:center;gap:5px}
+.add-res-btn:hover{background:var(--bg-hover)}
+
+.filters{display:flex;gap:5px;margin-bottom:16px;flex-wrap:wrap}
+.filter-btn{padding:5px 12px;border-radius:var(--radius);border:none;font-size:13px;font-weight:500;background:transparent;color:var(--text-sub);transition:all .1s}
+.filter-btn:hover{background:var(--bg-hover)}.filter-btn.active{background:var(--text);color:#fff}
+.filter-sep{width:1px;height:20px;background:var(--border);margin:0 4px;align-self:center}
+
+.res-table{border:1px solid var(--border-light);border-radius:8px;overflow:hidden}
+.res-card{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .08s;position:relative}
+.res-card:last-child{border-bottom:none}.res-card:hover{background:var(--bg-hover)}
+.res-card-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;margin-top:1px}
+.res-card-icon.flight{background:#bfdbfe}.res-card-icon.hotel{background:#fde68a}.res-card-icon.car{background:#bbf7d0}
+.res-card-icon.transport{background:#ddd6fe}.res-card-icon.diving{background:#a5f3fc}.res-card-icon.usim{background:#e5e7eb}
+.res-card-body{flex:1;min-width:0}
+.res-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.res-card-name{font-weight:600;font-size:14px;line-height:1.35;color:var(--text)}
+.res-card-amount{font-weight:700;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap;flex-shrink:0;line-height:1.35}
+.res-card-amount.zero{color:var(--text-muted);font-weight:400}
+.res-card-fx{font-size:11px;color:var(--text-muted);font-weight:400;text-align:right;margin-top:1px}
+.res-card-meta{font-size:12px;color:var(--text-muted);margin-top:3px}
+.res-card-bottom{display:flex;align-items:center;gap:6px;margin-top:6px;flex-wrap:wrap}
+.res-card-people{font-size:12px;color:var(--text-sub)}
+.res-card-share{font-size:12px;font-weight:600;color:var(--accent);background:var(--accent-bg);padding:2px 7px;border-radius:4px}
+.res-card-payer{font-size:12px;color:var(--text-sub);display:inline-flex;align-items:center;gap:3px}
+.member-chip{display:inline-flex;align-items:center;padding:2px 9px;border-radius:10px;font-size:12px;font-weight:500;background:var(--accent-bg);color:var(--accent)}
+.member-chip.me{background:#dcfce7;color:#166534}
+.member-chip.guest{background:var(--bg-hover);color:var(--text-muted);font-style:italic}
+.res-card .del-btn{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:5px;border:none;background:transparent;color:var(--text-muted);font-size:14px;display:flex;align-items:center;justify-content:center;opacity:0;transition:all .1s}
+.res-card:hover .del-btn{opacity:1}.res-card .del-btn:hover{background:var(--red-bg);color:var(--red)}
+
+.status-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.1px}
+.status-tag.done{background:#10b981;color:#fff}.status-tag.need{background:#ef4444;color:#fff}.status-tag.none{background:#e5e7eb;color:#6b7280}
+.cat-tag{display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:4px;font-size:12px;font-weight:500}
+.cat-tag.flight{background:#d3e5ef;color:#2a6490}.cat-tag.hotel{background:#fdecc8;color:#89632a}.cat-tag.car{background:#dbeddb;color:#2f6e3b}
+.cat-tag.transport{background:#e8deee;color:#6940a5}.cat-tag.diving{background:#d3e5ef;color:#2a6490}.cat-tag.usim{background:#e3e2e0;color:#5a5a57}
+.person-tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:12px;font-weight:500;margin:1px}
+.people-cell{display:flex;flex-wrap:wrap;gap:3px}
+.total-row{display:grid;grid-template-columns:1fr 120px 36px;padding:12px 16px;border-top:1px solid var(--border);background:var(--bg-sidebar);font-size:14px;font-weight:600}
+.total-row .total-amount{text-align:right;font-variant-numeric:tabular-nums}
+.empty-state{padding:48px;text-align:center;color:var(--text-muted);font-size:15px}
+.migrating-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}.migrating-screen p{font-size:14px;color:var(--text-sub)}
+.trip-card .share-trip{position:absolute;right:32px;top:8px;width:22px;height:22px;border-radius:5px;border:none;background:transparent;color:var(--text-muted);font-size:12px;display:none;align-items:center;justify-content:center}.trip-card:hover .share-trip{display:flex}.trip-card .share-trip:hover{background:var(--accent-bg);color:var(--accent)}
+.year-nav{display:flex;align-items:center;justify-content:space-between;padding:6px 6px 12px;margin-bottom:2px}.year-nav .year-label{font-size:14px;font-weight:700;color:var(--text)}.year-nav button{width:26px;height:26px;border-radius:5px;border:none;background:transparent;color:var(--text-muted);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}.year-nav button:hover{background:var(--bg-hover)}
+.join-trip-btn{padding:8px 12px;border-radius:8px;border:none;width:100%;font-size:13px;font-weight:500;background:transparent;color:var(--text-muted);margin-top:4px;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}.join-trip-btn:hover{background:var(--bg-hover);color:var(--text)}
+.private-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);cursor:pointer;user-select:none;font-size:13px;color:var(--text-sub)}.private-row input{cursor:pointer}
+.res-card-trip{font-weight:700;color:var(--text)}
+.member-checks-wrap{display:flex;flex-wrap:wrap;gap:5px;padding:4px 0}
+.member-check{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:1.5px solid var(--border);font-size:13px;cursor:pointer;user-select:none;transition:all .12s;color:var(--text-sub)}.member-check:has(input:checked){background:var(--accent-bg);border-color:var(--accent);color:var(--accent)}.member-check input{display:none}
+.tab-bar{display:flex;gap:0;margin-bottom:20px;border-bottom:1px solid var(--border-light);overflow-x:auto;-webkit-overflow-scrolling:touch}.tab-bar::-webkit-scrollbar{display:none}
+.tab-btn{padding:9px 16px;border:none;border-bottom:2px solid transparent;background:transparent;font-size:13px;font-weight:500;color:var(--text-sub);cursor:pointer;margin-bottom:-1px;transition:color .12s;white-space:nowrap;flex-shrink:0}.tab-btn:hover{color:var(--text)}.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600}
+.res-section-label{font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;padding:10px 16px 6px;background:var(--bg-sidebar);border-bottom:1px solid var(--border-light)}
+.detail-section{margin-bottom:24px}.detail-section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.detail-section-header h3{font-size:15px;font-weight:600}
+.detail-table{width:100%;border-collapse:collapse;font-size:13px;border:1px solid var(--border-light);border-radius:8px;overflow:hidden;margin-bottom:12px}
+.detail-table th{padding:9px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--text-muted);background:var(--bg-sidebar);border-bottom:1px solid var(--border-light)}
+.detail-table td{padding:10px 12px;border-bottom:1px solid var(--border-light);vertical-align:middle;line-height:1.5;font-size:13px}.detail-table tr:last-child td{border-bottom:none}
+.detail-table .edit-cell{text-align:right;width:60px}
+.detail-edit-btn{padding:4px 10px;border-radius:4px;border:1px solid var(--border);background:#fff;font-size:12px;cursor:pointer;color:var(--text-sub)}.detail-edit-btn:hover{background:var(--bg-hover)}
+.detail-card{background:#fff;border:1px solid var(--border-light);border-radius:10px;padding:16px;margin-bottom:10px}
+.detail-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.detail-card-title{font-size:14px;font-weight:600}
+.detail-kv{display:grid;grid-template-columns:80px 1fr;gap:6px 12px;font-size:13px}.detail-kv .kv-label{color:var(--text-muted);font-weight:500}
+.flight-note-row{background:#fff8e1;border-left:3px solid #f59e0b;padding:8px 12px;font-size:12px;color:#92400e;border-radius:0 4px 4px 0}
+.notes-area{width:100%;min-height:220px;padding:12px 14px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;line-height:1.7;transition:border-color .15s;color:var(--text)}
+.notes-area:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
+.add-detail-btn{padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--text-sub);cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s}.add-detail-btn:hover{background:var(--bg-hover)}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(15,15,15,.6);display:flex;align-items:center;justify-content:center;z-index:1000;animation:fadeIn .15s}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal{background:#fff;border-radius:12px;padding:24px;width:92%;max-width:480px;box-shadow:0 12px 40px rgba(0,0,0,.15),0 0 0 1px rgba(0,0,0,.05);animation:slideUp .2s ease;max-height:85vh;overflow-y:auto}
+@keyframes slideUp{from{transform:translateY(12px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:18px}
+.form-group{margin-bottom:12px}.form-group label{display:block;font-size:12px;font-weight:500;color:var(--text-sub);margin-bottom:4px}
+.form-group input,.form-group select{width:100%;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border);font-size:13px;transition:border-color .15s}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-bg)}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:18px}
+.btn-cancel{padding:7px 16px;border-radius:var(--radius);border:1px solid var(--border);background:#fff;font-size:13px;font-weight:500;color:var(--text-sub)}.btn-cancel:hover{background:var(--bg-hover)}
+.btn-save{padding:7px 20px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;transition:all .15s}.btn-save:hover{background:#2899c7}
+.btn-danger{padding:7px 16px;border-radius:var(--radius);border:none;background:var(--red-bg);color:var(--red);font-size:13px;font-weight:500}.btn-danger:hover{background:#f8d0d0}
+.emoji-picker{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px}
+.emoji-picker button{font-size:18px;padding:3px 6px;border-radius:4px;border:1px solid transparent;background:transparent}
+.emoji-picker button:hover{background:var(--bg-hover)}.emoji-picker button.picked{border-color:var(--accent);background:var(--accent-bg)}
+.fx-hint{font-size:11px;color:var(--text-muted);margin-top:4px}
+.fx-rate-row{display:flex;align-items:center;gap:6px;margin-top:6px;font-size:12px;color:var(--text-sub)}
+.fx-rate-row input{width:80px;padding:4px 6px;font-size:12px}
+
+.loading{display:flex;align-items:center;justify-content:center;min-height:100vh}
+.spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--text-muted);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+@media(max-width:768px){
+  /* Layout */
+  .app-layout{grid-template-columns:1fr}
+
+  /* Sidebar: horizontal scroll strip */
+  .sidebar{border-right:none;border-bottom:1px solid var(--border-light);padding:10px 12px;display:flex;gap:8px;overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;align-items:center}
+  .sidebar::-webkit-scrollbar{display:none}.sidebar-label{display:none}
+  .year-nav{display:none}
+  .join-trip-btn{display:none}
+  .trip-all{flex-shrink:0;width:auto;padding:7px 14px;font-size:13px}
+
+  /* Trip card: compact pill */
+  .trip-card{flex-shrink:0;width:auto;min-width:0;margin-bottom:0;padding:7px 12px;border-radius:20px}
+  .trip-card .card-bottom,.trip-card .card-progress,.trip-card .card-dates,.trip-card .card-month{display:none}
+  .trip-card .card-top{gap:7px}
+  .trip-card .card-emoji{font-size:20px}
+  .trip-card .card-city{font-size:13px;font-weight:600;letter-spacing:-.2px;margin-top:0}
+  .trip-card .delete-trip{display:none!important}
+  .trip-card .share-trip{display:flex!important;opacity:1;position:static;width:18px;height:18px;font-size:11px;margin-left:2px}
+  .add-trip-btn{flex-shrink:0;width:auto;padding:7px 14px;margin-top:0;white-space:nowrap;border-radius:20px;font-size:13px}
+
+  /* Header */
+  .header{padding:10px 14px}.header-left h1{font-size:15px}.header-right .name{display:none}
+
+  /* Main */
+  .main{padding:12px 12px 40px}
+  .main-top{margin-bottom:14px}.main-top h2{font-size:17px}.main-top .sub{font-size:12px}
+  .add-res-btn{padding:5px 12px;font-size:12px}
+
+  /* Summary: 총지출 + 미예약 2개만 */
+  .summary-row{grid-template-columns:repeat(2,1fr);margin-bottom:16px}
+  .summary-card{padding:11px 14px}.summary-card .value{font-size:15px}
+  .summary-card:nth-child(2),.summary-card:nth-child(3){display:none}
+
+  /* Filters: 상태 필터만, 카테고리 숨김 */
+  .filters{gap:3px;margin-bottom:12px}
+  .filter-btn{font-size:12px;padding:4px 10px}
+  .filter-sep,.filter-sep ~ .filter-btn{display:none}
+
+  /* Reservation card: 이름+금액+상태만 */
+  .res-table{border-radius:6px}
+  .res-card{padding:10px 12px;gap:9px}
+  .res-card-icon{width:30px;height:30px;font-size:14px}
+  .res-card-meta{display:none}
+  .res-card-people,.res-card-share{display:none}
+  .res-card .del-btn{display:none}
+  .res-card-top{gap:6px}
+  .res-card-name{font-size:13px}
+  .res-card-amount{font-size:13px}
+
+  /* Total row */
+  .total-row{grid-template-columns:1fr 90px 0;padding:9px 12px}
+
+  /* Modal */
+  .modal{padding:18px;max-width:95%;border-radius:10px}.form-row,.form-row-3{grid-template-columns:1fr}
+
+  /* Tab bar */
+  .tab-btn{padding:8px 12px;font-size:12px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+firebase.initializeApp({apiKey:"AIzaSyCINhPlJyeaSJZBVzClIftXcsZR5ZkyNPM",authDomain:"this-year-my-trip.firebaseapp.com",projectId:"this-year-my-trip",storageBucket:"this-year-my-trip.firebasestorage.app",messagingSenderId:"346683452481",appId:"1:346683452481:web:f33cf1bb3b0e59a85aeac0"});
+const auth=firebase.auth(),db=firebase.firestore(),gp=new firebase.auth.GoogleAuthProvider();
+
+// === Currency config ===
+const CURRENCIES=[
+  {code:'KRW',symbol:'₩',name:'원'},
+  {code:'JPY',symbol:'¥',name:'엔'},
+  {code:'CNY',symbol:'¥',name:'위안'},
+  {code:'USD',symbol:'$',name:'달러'},
+  {code:'VND',symbol:'₫',name:'동'},
+  {code:'IDR',symbol:'Rp',name:'루피아'},
+  {code:'THB',symbol:'฿',name:'바트'},
+  {code:'EUR',symbol:'€',name:'유로'},
+];
+let exchangeRates={KRW:1}; // rates relative to KRW
+let ratesLoaded=false;
+
+async function loadRates(){
+  try{
+    const r=await fetch('https://open.er-api.com/v6/latest/KRW');
+    const d=await r.json();
+    if(d.rates){
+      exchangeRates={KRW:1};
+      for(const c of CURRENCIES){
+        if(d.rates[c.code])exchangeRates[c.code]=d.rates[c.code];
+      }
+      ratesLoaded=true;
+    }
+  }catch(e){console.warn('환율 로드 실패, 기본값 사용');
+    exchangeRates={KRW:1,JPY:0.1067,CNY:0.005,USD:0.00069,VND:17.86,IDR:11.36,THB:0.024,EUR:0.00064};
+    ratesLoaded=true;
+  }
+}
+
+function toKRW(amount,currency,customRate){
+  if(!amount||currency==='KRW')return amount||0;
+  if(customRate&&customRate>0)return Math.round(amount/customRate);
+  const rate=exchangeRates[currency];
+  if(!rate)return amount;
+  return Math.round(amount/rate);
+}
+
+function fmtCurrency(amount,currency){
+  if(!amount)return '—';
+  const c=CURRENCIES.find(x=>x.code===currency)||CURRENCIES[0];
+  if(currency==='KRW'||currency==='JPY'||currency==='VND'||currency==='IDR')
+    return c.symbol+amount.toLocaleString('ko-KR');
+  return c.symbol+amount.toLocaleString('ko-KR',{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+function fmtKRW(n){return n?'₩'+n.toLocaleString('ko-KR'):'—';}
+
+// === Seed data ===
+const SEED_T=[{id:"shanghai-apr",name:"4월 상해",dates:"2026/04/09 → 2026/04/12",people:2,emoji:"🇨🇳",order:1},{id:"shanghai-may",name:"5월 상해",dates:"2026/05/08 → 2026/05/10",people:3,emoji:"🇨🇳",order:2},{id:"phuquoc-may",name:"5월 푸꾸옥",dates:"2026/05/28 → 2026/06/01",people:3,emoji:"🇻🇳",order:3},{id:"nagoya-jun",name:"6월 나고야",dates:"2026/06/11 → 2026/06/14",people:4,emoji:"🇯🇵",order:4},{id:"okinawa-jul",name:"7월 오키나와",dates:"2026/07/10 → 2026/07/14",people:7,emoji:"🇯🇵",order:5},{id:"jeju-jul",name:"7월 제주",dates:"2026/07/16 → 2026/07/20",people:3,emoji:"🇰🇷",order:6},{id:"okinawa-aug",name:"8월 오키나와",dates:"2026/08/20 → 2026/08/23",people:3,emoji:"🇯🇵",order:7},{id:"bali-sep",name:"9월 발리",dates:"2026/08/30 → 2026/09/08",people:1,emoji:"🇮🇩",order:8},{id:"jeju-sep",name:"9월 제주",dates:"2026/09/10 → 2026/09/14",people:4,emoji:"🇰🇷",order:9}];
+const SEED_R=[{trip:"shanghai-apr",name:"항공",memo:"",date:"2025/07/30",status:"정산완료",vendor:"알리",total:290108,currency:"KRW",fxRate:0,category:"항공",people:["박다현","서희진"],perPerson:145054},{trip:"shanghai-apr",name:"숙소 (목금토일)",memo:"3박",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["박다현","서희진"],perPerson:0},{trip:"shanghai-apr",name:"Usim",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"usim",people:["서희진"],perPerson:0},{trip:"shanghai-may",name:"항공",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"항공",people:["서희진"],perPerson:0},{trip:"shanghai-may",name:"숙소 (금-일)",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["서희진","신채임","장효미"],perPerson:0},{trip:"shanghai-may",name:"Usim",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"usim",people:[],perPerson:0},{trip:"phuquoc-may",name:"항공권",memo:"F5FT2A",date:"2026/01/30",status:"정산완료",vendor:"파라타항공",total:338400,currency:"KRW",fxRate:0,category:"항공",people:["서희진"],perPerson:338400},{trip:"phuquoc-may",name:"숙소 (목-금)",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["박하늘","서희진","여인희"],perPerson:0},{trip:"phuquoc-may",name:"숙소 (금-일)",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["박하늘","서희진","여인희"],perPerson:0},{trip:"phuquoc-may",name:"Usim",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"usim",people:[],perPerson:0},{trip:"nagoya-jun",name:"항공",memo:"김포 나고야",date:"2026/03/05",status:"정산완료",vendor:"피치항공",total:284100,currency:"KRW",fxRate:0,category:"항공",people:["서희진"],perPerson:284100},{trip:"nagoya-jun",name:"숙소",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["김민선","박선하","서희진","임승현"],perPerson:0},{trip:"nagoya-jun",name:"렌트카",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"렌터카",people:[],perPerson:0},{trip:"nagoya-jun",name:"Usim",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"usim",people:[],perPerson:0},{trip:"okinawa-jul",name:"항공 출발편",memo:"",date:"2026/02/12",status:"정산완료",vendor:"아시아나",total:140300,currency:"KRW",fxRate:0,category:"항공",people:["서희진"],perPerson:140300},{trip:"okinawa-jul",name:"항공 도착편",memo:"K6CB6V",date:"2026/01/20",status:"정산완료",vendor:"제주항공",total:120000,currency:"KRW",fxRate:0,category:"항공",people:["서희진"],perPerson:120000},{trip:"okinawa-jul",name:"숙소 (토-화)",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["서희진","신유진","신채임","이상화","장효미","전지훈","최지선"],perPerson:0},{trip:"okinawa-jul",name:"숙소 (금-토)",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["서희진","장효미","전지훈"],perPerson:0},{trip:"okinawa-jul",name:"렌트카",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"렌터카",people:["서희진","신유진","신채임","이상화","장효미","전지훈","최지선"],perPerson:0},{trip:"okinawa-jul",name:"다이빙",memo:"토요일 오전 3깡",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"다이빙",people:[],perPerson:0},{trip:"okinawa-jul",name:"Usim",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"usim",people:[],perPerson:0},{trip:"jeju-jul",name:"항공 출발편",memo:"AA3UCN",date:"2026/01/30",status:"정산완료",vendor:"파라타",total:132000,currency:"KRW",fxRate:0,category:"항공",people:["김영현","서희진","최수영"],perPerson:44000},{trip:"jeju-jul",name:"항공 귀국편",memo:"D26JCX",date:"2026/02/10",status:"정산완료",vendor:"진에어",total:64800,currency:"KRW",fxRate:0,category:"항공",people:["김영현","서희진","최수영"],perPerson:21600},{trip:"jeju-jul",name:"목-금 숙소",memo:"호텔샬롬",date:"2026/03/04",status:"정산필요",vendor:"아고다",total:84596,currency:"KRW",fxRate:0,category:"숙소",people:["김영현","서희진","최수영"],perPerson:28199},{trip:"jeju-jul",name:"금-일 숙소",memo:"솔라시도 펜션",date:"2026/03/03",status:"정산필요",vendor:"아고다",total:152635,currency:"KRW",fxRate:0,category:"숙소",people:["김영현","서희진","최수영"],perPerson:50878},{trip:"jeju-jul",name:"일-월 숙소",memo:"제주시",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["김영현","서희진","최수영"],perPerson:0},{trip:"jeju-jul",name:"렌트카",memo:"아방이",date:"2026/03/04",status:"정산필요",vendor:"빌리카",total:228180,currency:"KRW",fxRate:0,category:"렌터카",people:["김영현","서희진","최수영"],perPerson:76060},{trip:"okinawa-aug",name:"항공",memo:"H93EQP",date:"2026/03/04",status:"정산완료",vendor:"제주항공",total:88480,currency:"KRW",fxRate:0,category:"항공",people:["서희진"],perPerson:88480},{trip:"okinawa-aug",name:"항공",memo:"F9Q1HM",date:"2026/02/04",status:"정산완료",vendor:"제주항공",total:178400,currency:"KRW",fxRate:0,category:"항공",people:["김영현","최수영"],perPerson:0},{trip:"okinawa-aug",name:"숙소 목-금",memo:"나하 항구쪽",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["김영현","서희진","최수영"],perPerson:0},{trip:"okinawa-aug",name:"숙소 금-토",memo:"자마미섬 민박",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["김영현","서희진","최수영"],perPerson:0},{trip:"okinawa-aug",name:"숙소 토-일",memo:"나하 공항쪽?",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["김영현","서희진","최수영"],perPerson:0},{trip:"okinawa-aug",name:"렌트카",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"렌터카",people:["김영현","서희진","최수영"],perPerson:0},{trip:"okinawa-aug",name:"배편 자마미섬 in",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"교통",people:["김영현","서희진","최수영"],perPerson:0},{trip:"okinawa-aug",name:"배편 자마미섬 out",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"교통",people:["김영현","서희진","최수영"],perPerson:0},{trip:"okinawa-aug",name:"Usim",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"usim",people:[],perPerson:0},{trip:"bali-sep",name:"항공",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"항공",people:["서희진"],perPerson:0},{trip:"bali-sep",name:"숙소",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["서희진"],perPerson:0},{trip:"bali-sep",name:"Usim",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"usim",people:["서희진"],perPerson:0},{trip:"jeju-sep",name:"항공 출발편",memo:"",date:"2026/02/03",status:"정산완료",vendor:"제주항공",total:33280,currency:"KRW",fxRate:0,category:"항공",people:["서희진"],perPerson:33280},{trip:"jeju-sep",name:"항공 도착편",memo:"",date:"2026/03/10",status:"정산완료",vendor:"진에어",total:21600,currency:"KRW",fxRate:0,category:"항공",people:["서희진"],perPerson:21600},{trip:"jeju-sep",name:"목-토 숙소 (2박)",memo:"애월",date:"2026/03/03",status:"정산필요",vendor:"아고다",total:257927,currency:"KRW",fxRate:0,category:"숙소",people:["박다현","서희진","여인희","이가은"],perPerson:64482},{trip:"jeju-sep",name:"토-일 숙소 (1박)",memo:"서귀포시",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["박다현","서희진","여인희","이가은"],perPerson:0},{trip:"jeju-sep",name:"일-월 숙소 (1박)",memo:"제주시",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"숙소",people:["박다현","서희진","여인희","이가은"],perPerson:0},{trip:"jeju-sep",name:"렌트카",memo:"",date:"",status:"미예약",vendor:"",total:0,currency:"KRW",fxRate:0,category:"렌터카",people:["박다현","서희진","여인희","이가은"],perPerson:0}];
+
+// === State ===
+let S={screen:'loading',user:null,trips:[],reservations:[],selectedTrip:null,filterStatus:'all',filterCategory:'all',modal:null,activeTab:'budget',selectedYear:new Date().getFullYear(),notesEditing:false};
+const PTAGS=[{bg:"#d3e5ef",c:"#2a6490"},{bg:"#f5e0e9",c:"#93395a"},{bg:"#dbeddb",c:"#2f6e3b"},{bg:"#fdecc8",c:"#89632a"},{bg:"#e8deee",c:"#6940a5"},{bg:"#fadec9",c:"#854c1d"},{bg:"#d3e5ef",c:"#28456c"},{bg:"#f5e0e9",c:"#6b3352"},{bg:"#e3e2e0",c:"#5a5a57"},{bg:"#fdecc8",c:"#73642a"},{bg:"#dbeddb",c:"#2b593f"},{bg:"#e8deee",c:"#533ea5"}];
+const pMap={};let pIdx=0;function pt(n){if(!pMap[n])pMap[n]=PTAGS[pIdx++%PTAGS.length];return pMap[n];}
+const CC={"항공":"flight","숙소":"hotel","렌터카":"car","교통":"transport","다이빙":"diving","usim":"usim"};
+const CI={"항공":"✈️","숙소":"🏨","렌터카":"🚗","교통":"🚌","다이빙":"🤿","usim":"📱"};
+const EMOJIS=["🇰🇷","🇯🇵","🇨🇳","🇻🇳","🇮🇩","🇹🇭","🇺🇸","🇫🇷","🇮🇹","🇪🇸","🇬🇧","🇩🇪","🇦🇺","🏝️","✈️","🌏"];
+
+function getKRW(r){return r.currency==='KRW'?r.total:toKRW(r.total,r.currency||'KRW',r.fxRate);}
+
+// === Firebase ===
+function tC(){return db.collection('trips')}
+function rC(){return db.collection('reservations')}
+function genCode(){return Math.random().toString(36).substring(2,8).toUpperCase();}
+function myName(){return(S.user&&localStorage.getItem('nick_'+S.user.uid))||S.user?.displayName||'';}
+
+async function load(){
+  const uid=S.user.uid;
+  const t=await tC().where('members','array-contains',uid).get();
+  S.trips=t.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(a.order||0)-(b.order||0));
+  const tripIds=S.trips.filter(t=>t.id!=='_init').map(t=>t.id);
+  if(!tripIds.length){S.reservations=[];return;}
+  const batches=[];for(let i=0;i<tripIds.length;i+=30)batches.push(tripIds.slice(i,i+30));
+  const results=await Promise.all(batches.map(ids=>rC().where('tripId','in',ids).get()));
+  S.reservations=results.flatMap(r=>r.docs.map(d=>({id:d.id,...d.data()}))).filter(r=>!r.private||r.createdBy===uid);
+}
+
+async function migrateData(){
+  const uid=S.user.uid;const oldCol=db.collection('users').doc(uid);
+  const oldTrips=await oldCol.collection('trips').get();
+  if(oldTrips.empty)return false;
+  const tripIdMap={};const b=db.batch();const curYear=S.selectedYear;
+  oldTrips.docs.forEach(doc=>{
+    const newRef=tC().doc(doc.id);tripIdMap[doc.id]=doc.id;
+    b.set(newRef,{...doc.data(),year:curYear,owner:uid,members:[uid],memberNames:{[uid]:myName()||S.user.email},inviteCode:genCode()});
+  });
+  const oldRes=await oldCol.collection('reservations').get();
+  oldRes.docs.forEach(doc=>{
+    const{trip,...rest}=doc.data();
+    b.set(rC().doc(),{...rest,tripId:tripIdMap[trip]||trip,year:curYear,createdBy:uid,private:false});
+  });
+  await b.commit();
+  const d=db.batch();
+  oldTrips.docs.forEach(doc=>d.delete(doc.ref));oldRes.docs.forEach(doc=>d.delete(doc.ref));
+  await d.commit();return true;
+}
+
+async function seed(){
+  const uid=S.user.uid;const b=db.batch();const yr=S.selectedYear;
+  SEED_T.forEach(t=>{const{id,...data}=t;b.set(tC().doc(id),{...data,year:yr,owner:uid,members:[uid],memberNames:{[uid]:myName()||S.user.email},inviteCode:genCode()});});
+  SEED_R.forEach(r=>{const{trip,...rest}=r;b.set(rC().doc(),{...rest,tripId:trip,year:yr,createdBy:uid,private:false});});
+  await b.commit();
+}
+
+async function joinByCode(code){
+  const uid=S.user.uid;
+  const q=await tC().where('inviteCode','==',code.toUpperCase()).limit(1).get();
+  if(q.empty){alert('초대 코드를 찾을 수 없습니다');return;}
+  const doc=q.docs[0];
+  if(!doc.data().members.includes(uid)){
+    await tC().doc(doc.id).update({members:firebase.firestore.FieldValue.arrayUnion(uid),[`memberNames.${uid}`]:myName()||S.user.email});
+  }
+  window.history.replaceState({},'','/');
+}
+
+async function chk(){
+  const uid=S.user.uid;
+  try{
+    const oldData=await db.collection('users').doc(uid).collection('trips').limit(1).get();
+    if(!oldData.empty){S.screen='migrating';render();await migrateData();}
+  }catch(e){console.warn('마이그레이션 건너뜀 (권한 확인 필요):',e);}
+  const inv=new URLSearchParams(window.location.search).get('invite');
+  if(inv){try{await joinByCode(inv);}catch(e){console.warn(e);}}
+  try{await load();}catch(e){console.warn('로드 오류:',e);S.trips=[];S.reservations=[];}
+  const yearTrips=S.trips.filter(t=>t.year===S.selectedYear&&t.id!=='_init');
+  if(!yearTrips.length&&!S.trips.length&&!inv){S.screen='setup';render();return;}
+  S.screen='app';render();
+}
+
+auth.onAuthStateChanged(async u=>{if(u){S.user=u;S.selectedYear=new Date().getFullYear();await loadRates();await chk();}else{S.screen='login';S.user=null;render();}});
+function isMobile(){return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);}
+async function signIn(){
+  if(isInAppBrowser()){openInExtBrowser();return;}
+  if(isMobile()){await auth.signInWithRedirect(gp);return;}
+  try{await auth.signInWithPopup(gp);}
+  catch(e){
+    if(e.code==='auth/popup-blocked'||e.code==='auth/popup-closed-by-user'||e.code==='auth/cancelled-popup-request')
+      await auth.signInWithRedirect(gp);
+    else alert('로그인 실패: '+e.message);
+  }
+}
+window.openInExtBrowser=openInExtBrowser;
+auth.getRedirectResult().then(()=>{}).catch(()=>{});
+
+function isInAppBrowser(){
+  const ua=navigator.userAgent||'';
+  return /KAKAOTALK|Instagram|NAVER|NaverApp|Line|FB_IAB|FBIOS|Twitter|Snapchat|MicroMessenger/i.test(ua)||
+    (/Android/.test(ua)&&/wv\)/.test(ua));
+}
+function openInExtBrowser(){
+  const url=location.href;
+  if(/Android/i.test(navigator.userAgent)){
+    location.href='intent:'+url+'#Intent;scheme=https;package=com.android.chrome;end';
+  }else{
+    navigator.clipboard?.writeText(url).then(()=>alert('주소를 복사했어요.\nSafari 주소창에 붙여넣기 해주세요 😊')).catch(()=>alert('Safari 또는 Chrome에서 열어주세요:\n'+url));
+  }
+}
+
+async function signOut(){await auth.signOut();S={...S,screen:'login',user:null,trips:[],reservations:[],selectedTrip:null};render();}
+
+async function addTrip(d){
+  const uid=S.user.uid;const yr=S.selectedYear;
+  const data={...d,year:yr,order:S.trips.filter(t=>t.year===yr).length+1,owner:uid,members:[uid],memberNames:{[uid]:myName()||S.user.email},inviteCode:genCode()};
+  const r=await tC().add(data);S.trips.push({id:r.id,...data});render();
+}
+async function delTrip(id){if(!confirm('이 여행과 관련 예약을 모두 삭제할까요?'))return;await tC().doc(id).delete();const rel=S.reservations.filter(r=>r.tripId===id);for(const r of rel)await rC().doc(r.id).delete();S.trips=S.trips.filter(t=>t.id!==id);S.reservations=S.reservations.filter(r=>r.tripId!==id);if(S.selectedTrip===id)S.selectedTrip=null;render();}
+async function addR(d){const r=await rC().add({...d,createdBy:S.user.uid});S.reservations.push({id:r.id,...d,createdBy:S.user.uid});render();}
+async function updR(id,d){await rC().doc(id).update(d);const i=S.reservations.findIndex(r=>r.id===id);if(i>=0)S.reservations[i]={...S.reservations[i],...d};render();}
+async function delR(id){await rC().doc(id).delete();S.reservations=S.reservations.filter(r=>r.id!==id);render();}
+
+function fil(){let r=S.selectedTrip?S.reservations.filter(x=>x.tripId===S.selectedTrip):S.reservations.filter(x=>{const trip=S.trips.find(t=>t.id===x.tripId);return trip&&trip.year===S.selectedYear;});if(S.filterStatus!=='all')r=r.filter(x=>x.status===S.filterStatus);if(S.filterCategory!=='all')r=r.filter(x=>x.category===S.filterCategory);return r;}
+
+// === Render ===
+function render(){const a=document.getElementById('app');if(S.screen==='loading')a.innerHTML='<div class="loading"><div class="spinner"></div></div>';else if(S.screen==='migrating')a.innerHTML='<div class="migrating-screen"><div class="spinner"></div><p>데이터 업그레이드 중...</p></div>';else if(S.screen==='login')a.innerHTML=rLogin();else if(S.screen==='setup')a.innerHTML=rSetup();else a.innerHTML=rApp();}
+
+function rLogin(){const inApp=isInAppBrowser();return`<div class="login-screen"><div class="login-box"><div class="icon">🧳</div><h1>올해의 여행</h1><p>친구들과의 여행 예약을 한눈에 관리하세요</p>${inApp?`<div style="background:#fff8e1;border:1px solid #f59e0b;border-radius:8px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:#92400e;line-height:1.6"><strong>⚠️ 앱 내 브라우저 감지됨</strong><br>카카오톡·인스타 등 앱에서는 Google 로그인이 차단돼요.<br>Chrome 또는 Safari에서 열어주세요.</div><button class="google-btn" onclick="openInExtBrowser()" style="background:#f0fdf4;border-color:#86efac;color:#166534">🌐 외부 브라우저로 열기</button>`:`<button class="google-btn" onclick="signIn()"><svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>Google로 로그인</button>`}</div></div>`;}
+
+function rSetup(){return`<div class="setup-screen"><div class="setup-box"><h2>🎉 처음이시네요!</h2><p class="desc">노션에서 가져온 여행 데이터를 자동으로 세팅할까요?</p><div class="setup-actions"><button class="btn-cancel" onclick="skipSeed()">빈 상태로 시작</button><button class="btn-save" onclick="doSeed()">샘플 데이터 불러오기</button></div></div></div>`;}
+window.doSeed=async()=>{await seed();await load();S.screen='app';render();};
+window.skipSeed=()=>{S.trips=[];S.reservations=[];S.screen='app';render();};
+
+function rApp(){const res=fil();const sel=S.trips.find(t=>t.id===S.selectedTrip);
+const mainContent=sel?rTabBar()+rTabContent(sel,res):rFilters()+rTable(res);
+return`${rHeader()}<div class="app-layout"><div class="sidebar">${rSidebar()}</div><div class="main">${rSummary(res)}${rMainTop(sel)}${mainContent}</div></div>${S.modal?rModal():''}`;}
+
+function rHeader(){const u=S.user;const nm=myName();return`<div class="header"><div class="header-left"><span class="icon">🧳</span><h1>올해의 여행</h1></div><div class="header-right">${u.photoURL?`<img src="${u.photoURL}">`:''}  <button class="logout-btn" onclick="openNicknameM()" title="닉네임 변경" style="font-weight:500;color:var(--text)">${nm||u.email}</button><button class="logout-btn" onclick="signOut()">로그아웃</button></div></div>`;}
+
+function rSidebar(){const yr=S.selectedYear;const trips=S.trips.filter(t=>t.id!=='_init'&&t.year===yr);
+function pN(n){const m=n.match(/^(\d+월)\s*(.+)$/);return m?{month:m[1],city:m[2]}:{month:'',city:n};}
+return`<div class="year-nav"><button onclick="setYear(${yr-1})">‹</button><span class="year-label">${yr}년</span><button onclick="setYear(${yr+1})">›</button></div><button class="trip-all ${S.selectedTrip===null?'active':''}" onclick="selT(null)"><span class="ico">📋</span> 전체 보기</button>${trips.map(t=>{const tr=S.reservations.filter(r=>r.tripId===t.id);const bk=tr.filter(r=>r.status!=='미예약').length;const tot=tr.length;const ns=tr.some(r=>r.status==='정산필요');const spent=tr.reduce((s,r)=>s+getKRW(r),0);const p=pN(t.name);return`<div class="trip-card ${S.selectedTrip===t.id?'active':''}" onclick="selT('${t.id}')"><button class="share-trip" onclick="event.stopPropagation();copyInvite('${t.inviteCode||''}','${t.name||''}')" title="초대 링크 복사">🔗</button><button class="delete-trip" onclick="event.stopPropagation();delTrip('${t.id}')" title="삭제">✕</button><div class="card-top"><div class="card-emoji">${t.emoji||'✈️'}</div><div class="card-info"><div class="card-month">${p.month}</div><div class="card-city">${p.city}</div><div class="card-dates">${t.dates||''}</div></div></div><div class="card-bottom"><div class="card-stats"><span>👥 ${t.people||0}명</span><span>${bk}/${tot} 예약</span>${ns?'<div class="settle-dot"></div>':''}</div><div class="card-money">${spent>0?fmtKRW(spent):'—'}</div></div><div class="card-progress"><div class="card-progress-fill" style="width:${tot?(bk/tot*100):0}%"></div></div></div>`;}).join('')}<button class="add-trip-btn" onclick="openTM()">+ 새 여행</button><button class="join-trip-btn" onclick="openJoinM()">🔗 초대 코드로 참가</button><button class="join-trip-btn" onclick="openNameFixM()" style="font-size:12px;color:var(--text-muted)">🔄 이름 일괄 변경</button>`;}
+
+function rSummary(res){const t=res.reduce((s,r)=>s+getKRW(r),0);const st=res.filter(r=>r.status==='정산완료').reduce((s,r)=>s+getKRW(r),0);const nd=res.filter(r=>r.status==='정산필요').reduce((s,r)=>s+getKRW(r),0);const ub=res.filter(r=>r.status==='미예약').length;
+return`<div class="summary-row"><div class="summary-card"><div class="label">총 지출</div><div class="value">${fmtKRW(t)}</div></div><div class="summary-card"><div class="label">정산완료</div><div class="value green">${fmtKRW(st)}</div></div><div class="summary-card"><div class="label">정산필요</div><div class="value orange">${fmtKRW(nd)}</div></div><div class="summary-card"><div class="label">미예약</div><div class="value red">${ub}건</div></div></div>`;}
+
+function rMainTop(sel){
+  let memberRow='';
+  if(sel){
+    const memberNames=Object.values(sel.memberNames||{});
+    const _mn=myName();
+    const chips=memberNames.map(n=>`<span class="member-chip${n===_mn?' me':''}">${n}</span>`).join('');
+    const allPpl=[...new Set(S.reservations.filter(r=>r.tripId===sel.id).flatMap(r=>r.people||[]))];
+    const guests=allPpl.filter(p=>!memberNames.includes(p));
+    const guestChips=guests.map(n=>`<span class="member-chip guest" onclick="openNameFixM('${n.replace(/'/g,"\\'")}')" style="cursor:pointer" title="클릭해서 이름 변경">${n} ✎</span>`).join('');
+    memberRow=`<div style="display:flex;flex-wrap:wrap;align-items:center;gap:4px;margin-top:6px">${chips}${guestChips}${guests.length?`<span style="font-size:11px;color:var(--text-muted);margin-left:2px">미가입</span>`:''}</div>`;
+  }
+  return`<div class="main-top"><div><h2>${sel?`${sel.emoji||''} ${sel.name}`:'전체 예약'}</h2>${sel?`<div class="sub">${sel.dates||''}</div>${memberRow}`:''}</div><div style="display:flex;gap:6px;align-self:flex-start">${sel?`<button class="add-res-btn" onclick="openMembersM('${sel.id}')">👥 멤버</button>`:''}<button class="add-res-btn" onclick="openRM()"><span>+</span> 새 예약</button></div></div>`;
+}
+
+function rFilters(){const cats=[...new Set(S.reservations.map(r=>r.category))];
+return`<div class="filters">${['all','정산완료','정산필요','미예약'].map(s=>`<button class="filter-btn ${S.filterStatus===s?'active':''}" onclick="setF('s','${s}')">${s==='all'?'전체':s}</button>`).join('')}<div class="filter-sep"></div><button class="filter-btn ${S.filterCategory==='all'?'active':''}" onclick="setF('c','all')">전체</button>${cats.map(c=>`<button class="filter-btn ${S.filterCategory===c?'active':''}" onclick="setF('c','${c}')">${CI[c]||'📦'} ${c}</button>`).join('')}</div>`;}
+
+function rTabBar(){return`<div class="tab-bar"><button class="tab-btn ${S.activeTab==='budget'?'active':''}" onclick="setTab('budget')">💰 가계부</button><button class="tab-btn ${S.activeTab==='flights'?'active':''}" onclick="setTab('flights')">✈️ 항공편</button><button class="tab-btn ${S.activeTab==='hotels'?'active':''}" onclick="setTab('hotels')">🏨 숙소</button><button class="tab-btn ${S.activeTab==='cars'?'active':''}" onclick="setTab('cars')">🚗 렌터카</button><button class="tab-btn ${S.activeTab==='notes'?'active':''}" onclick="setTab('notes')">📝 메모</button></div>`;}
+
+function rTabContent(sel,res){if(S.activeTab==='flights')return rTabFlights(sel,res);if(S.activeTab==='hotels')return rTabHotels(sel,res);if(S.activeTab==='cars')return rTabCars(sel,res);if(S.activeTab==='notes')return rTabNotes(sel);return rFilters()+rTable(res,sel);}
+
+function fmtDate(d){if(!d)return'';if(/^\d{4}-\d{2}-\d{2}$/.test(d)){const[,m,dd]=d.split('-');return`${parseInt(m)}/${parseInt(dd)}`;}return d;}
+
+function rLinkedRes(res,category){
+  const items=res.filter(r=>r.category===category);if(!items.length)return'';
+  const krwTotal=items.reduce((s,r)=>s+getKRW(r),0);
+  return`<div style="margin-bottom:20px"><div style="font-size:11px;font-weight:600;color:var(--text-muted);letter-spacing:.5px;margin-bottom:8px;padding:0 2px">가계부 연동</div><div class="res-table">${items.map(r=>{const sc=r.status==='정산완료'?'done':r.status==='정산필요'?'need':'none';const si=r.status==='정산완료'?'✓':r.status==='정산필요'?'!':'✕';const krw=getKRW(r);const meta=[r.vendor,r.date].filter(Boolean).join(' · ');return`<div class="res-card" onclick="editR('${r.id}')"><div class="res-card-icon ${CC[r.category]||'usim'}">${CI[r.category]||'📦'}</div><div class="res-card-body"><div class="res-card-top"><div class="res-card-name">${r.name}</div><div class="res-card-amount ${krw?'':'zero'}">${krw?fmtKRW(krw):'—'}</div></div><div class="res-card-bottom"><span class="status-tag ${sc}">${si} ${r.status}</span>${meta?`<span style="font-size:12px;color:var(--text-muted)">${meta}</span>`:''}</div></div></div>`;}).join('')}<div class="total-row"><div>합계 ${items.length}건</div><div class="total-amount">${fmtKRW(krwTotal)}</div><div></div></div></div></div>`;
+}
+
+function rTabFlights(trip,res){const fl=trip.flights||[];const tid=trip.id;
+return rLinkedRes(res,'항공')+`<div class="detail-section"><div class="detail-section-header"><h3></h3><button class="add-detail-btn" onclick="openDetailModal('flight',-1,'${tid}')">+ 항공편 추가</button></div>${fl.length?`<table class="detail-table"><thead><tr><th></th><th>항공사 · 편명</th><th>출발</th><th>도착</th><th>소요시간</th><th></th></tr></thead><tbody>${fl.map((f,i)=>`<tr><td><strong>${f.type||''}</strong></td><td>${f.airline||'—'}<br><span style="font-size:11px;color:var(--text-muted)">${f.flightNo||''}</span></td><td>${f.from||'—'}<br><span style="font-size:11px;color:var(--text-muted)">${[fmtDate(f.fromDate),f.fromTime].filter(Boolean).join(' ')}</span></td><td>${f.to||'—'}<br><span style="font-size:11px;color:var(--text-muted)">${[fmtDate(f.toDate),f.toTime].filter(Boolean).join(' ')}</span></td><td style="white-space:nowrap">${f.duration||'—'}</td><td class="edit-cell"><button class="detail-edit-btn" onclick="openDetailModal('flight',${i},'${tid}')">편집</button></td></tr>${f.notes?`<tr><td colspan="6"><div class="flight-note-row">⚠️ ${f.notes}</div></td></tr>`:''}`).join('')}</tbody></table>`:`<div class="empty-state" style="padding:32px;border:1px solid var(--border-light);border-radius:8px">항공편 스케줄을 추가해보세요</div>`}</div>`;}
+
+function rTabHotels(trip,res){const ht=trip.hotels||[];const tid=trip.id;
+return rLinkedRes(res,'숙소')+`<div class="detail-section"><div class="detail-section-header"><h3></h3><button class="add-detail-btn" onclick="openDetailModal('hotel',-1,'${tid}')">+ 숙소 추가</button></div>${ht.map((h,i)=>`<div class="detail-card"><div class="detail-card-header"><div class="detail-card-title">🏨 ${h.name||'숙소'}</div><button class="detail-edit-btn" onclick="openDetailModal('hotel',${i},'${tid}')">편집</button></div><div class="detail-kv">${h.address?`<span class="kv-label">주소</span><span>${h.address}</span>`:''} ${h.checkIn?`<span class="kv-label">체크인</span><span>${fmtDate(h.checkIn)}</span>`:''} ${h.checkOut?`<span class="kv-label">체크아웃</span><span>${fmtDate(h.checkOut)}</span>`:''} ${h.mapUrl?`<span class="kv-label">지도</span><span><a href="${h.mapUrl}" target="_blank" style="color:var(--accent)">구글맵 열기 →</a></span>`:''}</div></div>`).join('')}${!ht.length?`<div class="empty-state" style="padding:32px;border:1px solid var(--border-light);border-radius:8px">숙소 상세 정보를 추가해보세요</div>`:''}</div>`;}
+
+function rTabCars(trip,res){const cr=trip.cars||[];const tid=trip.id;
+return rLinkedRes(res,'렌터카')+`<div class="detail-section"><div class="detail-section-header"><h3></h3><button class="add-detail-btn" onclick="openDetailModal('car',-1,'${tid}')">+ 렌터카 추가</button></div>${cr.length?`<table class="detail-table"><thead><tr><th>업체</th><th>차종</th><th>픽업 장소/일시</th><th>반납 일시</th><th></th></tr></thead><tbody>${cr.map((c,i)=>`<tr><td>${c.vendor||'—'}</td><td>${c.carType||'—'}</td><td>${c.pickupLocation||'—'}<br><span style="font-size:11px;color:var(--text-muted)">${fmtDate(c.pickupDate)||c.pickupTime||''}</span></td><td style="font-size:12px;color:var(--text-muted)">${fmtDate(c.returnDate)||c.returnTime||'—'}</td><td class="edit-cell"><button class="detail-edit-btn" onclick="openDetailModal('car',${i},'${tid}')">편집</button></td></tr>`).join('')}</tbody></table>`:`<div class="empty-state" style="padding:32px;border:1px solid var(--border-light);border-radius:8px">렌터카 정보를 추가해보세요</div>`}</div>`;}
+
+function renderNotesMd(text){
+  if(!text)return`<p style="color:var(--text-muted);font-size:13px">아직 메모가 없어요. 수정 버튼을 눌러 작성해보세요.</p>`;
+  const escaped=text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return escaped.split('\n').map(line=>{
+    if(/^# (.+)/.test(line))return`<h3 style="font-size:16px;font-weight:700;margin:14px 0 5px;color:var(--text)">${line.slice(2)}</h3>`;
+    if(/^## (.+)/.test(line))return`<h4 style="font-size:14px;font-weight:600;margin:12px 0 4px;color:var(--text)">${line.slice(3)}</h4>`;
+    if(/^[-*] (.+)/.test(line))return`<div style="display:flex;gap:8px;margin:3px 0;font-size:13px"><span style="color:var(--accent);flex-shrink:0">•</span><span>${line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').slice(2)}</span></div>`;
+    if(line==='')return`<div style="height:6px"></div>`;
+    return`<div style="margin:3px 0;font-size:13px;line-height:1.7">${line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`;
+  }).join('');
+}
+function rTabNotes(trip){
+  const notes=trip.notes||'';
+  if(S.notesEditing){
+    return`<div class="detail-section"><textarea class="notes-area" id="trip-notes-ta" placeholder="여행 메모, 준비물, 주의사항 등&#10;# 제목  ** 굵게  - 목록 사용 가능">${notes}</textarea><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:10px"><button class="btn-cancel" onclick="toggleNotesEdit(false)">취소</button><button class="btn-save" onclick="saveNotes('${trip.id}',this)">저장</button></div></div>`;
+  }
+  return`<div class="detail-section"><div style="padding:18px 20px;border:1px solid var(--border-light);border-radius:8px;min-height:120px;line-height:1.8;cursor:text" onclick="toggleNotesEdit(true)">${renderNotesMd(notes)}</div><div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span style="font-size:11px;color:var(--text-muted)"># 제목 &nbsp;**굵게** &nbsp;- 목록</span><button class="add-detail-btn" onclick="toggleNotesEdit(true)">✏️ 수정</button></div></div>`;
+}
+
+function rTable(res,trip){if(!res.length)return`<div class="res-table"><div class="empty-state">예약이 없습니다</div></div>`;
+const sorted=[...res].sort((a,b)=>{if(!a.date&&!b.date)return 0;if(!a.date)return 1;if(!b.date)return-1;return a.date.replace(/\//g,'-').localeCompare(b.date.replace(/\//g,'-'));});
+const t=res.reduce((s,r)=>s+getKRW(r),0);
+function cardHtml(r){const cc=CC[r.category]||'usim';const sc=r.status==='정산완료'?'done':r.status==='정산필요'?'need':'none';const si=r.status==='정산완료'?'✓':r.status==='정산필요'?'!':'✕';const cur=r.currency||'KRW';const krw=getKRW(r);const showFx=cur!=='KRW'&&r.total>0;const tripObj=!S.selectedTrip?S.trips.find(t=>t.id===r.tripId):null;const tripName=tripObj?tripObj.name:'';const metaText=[r.vendor,r.date].filter(Boolean).join(' · ');const metaHtml=[tripName?`<span class="res-card-trip">${tripName}</span>`:'',r.memo,metaText].filter(Boolean).join(' · ');const ppl=r.people||[];const mn=myName();const sortedPpl=mn&&ppl.includes(mn)?[mn,...ppl.filter(p=>p!==mn)]:ppl;const myShare=sortedPpl.length>1?Math.round(krw/sortedPpl.length):0;const pplText=sortedPpl.length===1?sortedPpl[0]:sortedPpl.length>1?sortedPpl[0]+' 외 '+(sortedPpl.length-1)+'명':'';
+return`<div class="res-card" onclick="editR('${r.id}')"><div class="res-card-icon ${cc}">${CI[r.category]||'📦'}</div><div class="res-card-body"><div class="res-card-top"><div class="res-card-name">${r.name}</div><div class="res-card-amount ${r.total?'':'zero'}">${r.total?fmtKRW(krw):'—'}${showFx?`<div class="res-card-fx">${fmtCurrency(r.total,cur)}</div>`:''}</div></div>${metaHtml?`<div class="res-card-meta">${metaHtml}</div>`:''}<div class="res-card-bottom"><span class="status-tag ${sc}">${si} ${r.status}</span>${r.payer?`<span class="res-card-payer">💳 ${r.payer}</span>`:''}${pplText?`<span class="res-card-people">👥 ${pplText}</span>`:''}${myShare?`<span class="res-card-share">내 ${fmtKRW(myShare)}</span>`:''}</div></div><button class="del-btn" onclick="event.stopPropagation();delR('${r.id}')" title="삭제">✕</button></div>`;}
+let body='';
+if(trip&&trip.dates){const sm=trip.dates.match(/(\d{4}[\/\-]\d{2}[\/\-]\d{2})/);if(sm){const startStr=sm[1].replace(/\//g,'-');const pre=sorted.filter(r=>r.date&&r.date.replace(/\//g,'-')<startStr);const main=sorted.filter(r=>!r.date||r.date.replace(/\//g,'-')>=startStr);if(pre.length)body+=`<div class="res-section-label">✈️ 여행 전 준비</div>${pre.map(cardHtml).join('')}`;if(main.length)body+=(pre.length?`<div class="res-section-label">🗺️ 여행 중</div>`:'')+main.map(cardHtml).join('');}else{body=sorted.map(cardHtml).join('');}}else{body=sorted.map(cardHtml).join('');}
+return`<div class="res-table">${body}<div class="total-row"><div>합계 ${res.length}건</div><div class="total-amount">${fmtKRW(t)}</div><div></div></div></div>`;}
+
+function rNameFixM(){const mn=myName();const prefill=S.modal?.prefill||'';return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>🔄 이름 일괄 변경</h3><p style="font-size:13px;color:var(--text-sub);margin-bottom:16px">예약 해당인원에서 이름을 일괄 변경합니다.</p><div class="form-group"><label>변경 전 이름</label><input id="nf-old" value="${prefill}" placeholder="기존 이름"></div><div class="form-group"><label>변경 후 이름</label><input id="nf-new" value="${mn}" placeholder="새 이름"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeM()">취소</button><button class="btn-save" onclick="doNameFix()">변경하기</button></div></div></div>`;}
+
+function rJoinM(){return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>🔗 초대 코드로 참가</h3><div class="form-group"><label>초대 코드</label><input id="join-code" placeholder="예: ABC123" style="text-transform:uppercase;letter-spacing:2px;font-size:16px;text-align:center"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeM()">취소</button><button class="btn-save" onclick="doJoin()">참가하기</button></div></div></div>`;}
+
+function rFlightModal(tripId,idx){const trip=S.trips.find(t=>t.id===tripId)||{};const f=idx>=0?(trip.flights||[])[idx]:{};
+return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>${idx>=0?'항공편 수정':'항공편 추가'}</h3><div class="form-row"><div class="form-group"><label>구분</label><select id="fl-type"><option value="가는편" ${f.type==='가는편'?'selected':''}>가는편</option><option value="오는편" ${f.type==='오는편'?'selected':''}>오는편</option><option value="경유" ${f.type==='경유'?'selected':''}>경유</option></select></div><div class="form-group"><label>항공사</label><input id="fl-airline" value="${f.airline||''}" placeholder="중국남방항공"></div></div><div class="form-row"><div class="form-group"><label>편명</label><input id="fl-no" value="${f.flightNo||''}" placeholder="CZ370"></div><div class="form-group"><label>소요시간</label><input id="fl-dur" value="${f.duration||''}" placeholder="2시간 15분"></div></div><div class="form-row"><div class="form-group"><label>출발 공항</label><input id="fl-from" value="${f.from||''}" placeholder="서울 인천 T1"></div><div class="form-group"><label>도착 공항</label><input id="fl-to" value="${f.to||''}" placeholder="상하이 푸동 T2"></div></div><div class="form-row"><div class="form-group"><label>출발 날짜</label><input type="date" id="fl-from-date" value="${f.fromDate||''}"></div><div class="form-group"><label>출발 시간</label><input type="time" id="fl-from-time" value="${f.fromTime||''}"></div></div><div class="form-row"><div class="form-group"><label>도착 날짜</label><input type="date" id="fl-to-date" value="${f.toDate||''}"></div><div class="form-group"><label>도착 시간</label><input type="time" id="fl-to-time" value="${f.toTime||''}"></div></div><div class="form-group"><label>메모/주의사항</label><input id="fl-notes" value="${f.notes||''}" placeholder="출발 시간 변경 등 주의사항"></div><div class="modal-actions">${idx>=0?`<button class="btn-danger" onclick="deleteDetail('flight',${idx},'${tripId}')" style="margin-right:auto">삭제</button>`:''}<button class="btn-cancel" onclick="closeM()">취소</button><button class="btn-save" onclick="saveDetail('flight',${idx},'${tripId}')">저장</button></div></div></div>`;}
+
+function rHotelModal(tripId,idx){const trip=S.trips.find(t=>t.id===tripId)||{};const h=idx>=0?(trip.hotels||[])[idx]:{};
+return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>${idx>=0?'숙소 수정':'숙소 추가'}</h3><div class="form-group"><label>숙소명</label><input id="ht-name" value="${h.name||''}" placeholder="애월 게스트하우스"></div><div class="form-group"><label>주소</label><input id="ht-addr" value="${h.address||''}" placeholder="제주시 애월읍 ..."></div><div class="form-row"><div class="form-group"><label>체크인</label><input type="date" id="ht-in" value="${h.checkIn||''}"></div><div class="form-group"><label>체크아웃</label><input type="date" id="ht-out" value="${h.checkOut||''}"></div></div><div class="form-group"><label>구글맵 링크</label><input id="ht-map" value="${h.mapUrl||''}" placeholder="https://maps.google.com/..."></div><div class="modal-actions">${idx>=0?`<button class="btn-danger" onclick="deleteDetail('hotel',${idx},'${tripId}')" style="margin-right:auto">삭제</button>`:''}<button class="btn-cancel" onclick="closeM()">취소</button><button class="btn-save" onclick="saveDetail('hotel',${idx},'${tripId}')">저장</button></div></div></div>`;}
+
+function rCarModal(tripId,idx){const trip=S.trips.find(t=>t.id===tripId)||{};const c=idx>=0?(trip.cars||[])[idx]:{};
+return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>${idx>=0?'렌터카 수정':'렌터카 추가'}</h3><div class="form-row"><div class="form-group"><label>업체</label><input id="car-vendor" value="${c.vendor||''}" placeholder="제주렌터카"></div><div class="form-group"><label>차종</label><input id="car-type" value="${c.carType||''}" placeholder="아반떼 또는 동급"></div></div><div class="form-group"><label>픽업 장소</label><input id="car-loc" value="${c.pickupLocation||''}" placeholder="공항 1층 렌터카 카운터"></div><div class="form-row"><div class="form-group"><label>픽업 날짜</label><input type="date" id="car-pick-date" value="${c.pickupDate||''}"></div><div class="form-group"><label>픽업 시간</label><input type="time" id="car-pick-time" value="${c.pickupTime||''}"></div></div><div class="form-row"><div class="form-group"><label>반납 날짜</label><input type="date" id="car-ret-date" value="${c.returnDate||''}"></div><div class="form-group"><label>반납 시간</label><input type="time" id="car-ret-time" value="${c.returnTime||''}"></div></div><div class="modal-actions">${idx>=0?`<button class="btn-danger" onclick="deleteDetail('car',${idx},'${tripId}')" style="margin-right:auto">삭제</button>`:''}<button class="btn-cancel" onclick="closeM()">취소</button><button class="btn-save" onclick="saveDetail('car',${idx},'${tripId}')">저장</button></div></div></div>`;}
+
+function rNicknameM(){const cur=myName();return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>✏️ 닉네임 변경</h3><p style="font-size:13px;color:var(--text-sub);margin-bottom:16px">앱에서 표시될 이름을 설정해요.<br>참가 중인 모든 여행의 멤버 이름도 함께 변경됩니다.</p><div class="form-group"><label>닉네임</label><input id="nick-input" value="${cur}" placeholder="표시할 이름"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeM()">취소</button><button class="btn-save" onclick="saveNickname()">저장</button></div></div></div>`;}
+
+function rInviteM(code,tripName){const url=`${location.origin}/?invite=${code}`;
+return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>🔗 초대코드</h3><p style="font-size:13px;color:var(--text-sub);margin-bottom:16px">${tripName||''}에 친구를 초대해보세요</p><div style="background:var(--bg-hover);border-radius:10px;padding:20px;text-align:center;margin-bottom:16px"><div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;font-weight:600;letter-spacing:1px">INVITE CODE</div><div style="font-size:32px;font-weight:700;letter-spacing:6px;color:var(--text);font-variant-numeric:tabular-nums">${code}</div></div><div style="font-size:12px;color:var(--text-muted);margin-bottom:8px">초대 링크</div><div style="display:flex;gap:6px"><input value="${url}" readonly style="flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);font-size:12px;background:#fff;color:var(--text-sub)"><button class="btn-save" onclick="copyInviteUrl('${url}')" style="white-space:nowrap;flex-shrink:0">복사</button></div><div style="font-size:12px;color:var(--text-muted);margin-top:12px">친구가 <strong>초대 코드로 참가</strong> 버튼에서 위 코드를 입력하거나, 링크를 직접 전달해도 돼요.</div><div class="modal-actions"><button class="btn-cancel" onclick="closeM()">닫기</button></div></div></div>`;}
+
+function rRenameMemberM(tripId,targetUid){
+  const trip=S.trips.find(t=>t.id===tripId);if(!trip)return'';
+  const currentName=(trip.memberNames||{})[targetUid]||targetUid;
+  return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>✎ 멤버 이름 변경</h3><p style="font-size:13px;color:var(--text-sub);margin-bottom:16px">예약의 해당인원 및 결제자 이름도 함께 변경됩니다.</p><div class="form-group"><label>현재 이름</label><input id="rm-old" value="${currentName}" readonly style="background:var(--bg-hover);color:var(--text-muted)"></div><div class="form-group"><label>새 이름</label><input id="rm-new" value="${currentName}" placeholder="새 이름 입력"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeM()">취소</button><button class="btn-save" onclick="saveRenameMember('${tripId}','${targetUid}')">변경</button></div></div></div>`;
+}
+
+function rModal(){const m=S.modal;if(m.type==='trip')return rTM(m.data);if(m.type==='members')return rMembersM(m.tripId);if(m.type==='invite')return rInviteM(m.code,m.tripName);if(m.type==='nickname')return rNicknameM();if(m.type==='namefix')return rNameFixM();if(m.type==='join')return rJoinM();if(m.type==='rename-member')return rRenameMemberM(m.tripId,m.targetUid);if(m.type==='detail-flight')return rFlightModal(m.tripId,m.idx);if(m.type==='detail-hotel')return rHotelModal(m.tripId,m.idx);if(m.type==='detail-car')return rCarModal(m.tripId,m.idx);return rRM(m.data);}
+
+function rTM(data){const e=!!data;const d=data||{name:'',dates:'',people:1,emoji:'✈️'};
+return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>${e?'여행 수정':'새 여행'}</h3><div class="form-group"><label>이름</label><input id="m-name" value="${d.name||''}" placeholder="예: 7월 오키나와"></div><div class="form-row"><div class="form-group"><label>날짜</label><input id="m-dates" value="${d.dates||''}" placeholder="2026/07/10 → 2026/07/14"></div><div class="form-group"><label>인원</label><input id="m-ppl" type="number" value="${d.people||1}" min="1"></div></div><div class="form-group"><label>이모지</label><div class="emoji-picker">${EMOJIS.map(em=>`<button onclick="document.getElementById('m-emo').value='${em}';document.querySelectorAll('.emoji-picker button').forEach(b=>b.classList.remove('picked'));this.classList.add('picked')" class="${d.emoji===em?'picked':''}">${em}</button>`).join('')}</div><input id="m-emo" type="hidden" value="${d.emoji||'✈️'}"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeM()">취소</button><button class="btn-save" onclick="saveT(${e?`'${data.id}'`:'null'})">${e?'수정':'추가'}</button></div></div></div>`;}
+
+function getPayerSelect(tripId,selectedPayer){
+  const trip=S.trips.find(t=>t.id===tripId);
+  const mn=myName();
+  let members=trip?Object.values(trip.memberNames||{}):[];
+  if(mn&&members.includes(mn))members=[mn,...members.filter(m=>m!==mn)];
+  const hasExtra=selectedPayer&&!members.includes(selectedPayer);
+  return`<select id="r-payer"><option value="">미정</option>${members.map(n=>`<option value="${n}" ${selectedPayer===n?'selected':''}>${n}</option>`).join('')}${hasExtra?`<option value="${selectedPayer}" selected>${selectedPayer}</option>`:''}</select>`;
+}
+
+function getMemberChecks(tripId,selectedPeople){
+  const trip=S.trips.find(t=>t.id===tripId);
+  if(!trip||!trip.memberNames||!Object.keys(trip.memberNames).length)return '';
+  const mn=myName();
+  let members=Object.values(trip.memberNames);
+  if(mn&&members.includes(mn))members=[mn,...members.filter(m=>m!==mn)];
+  return members.map(name=>`<label class="member-check"><input type="checkbox" name="r-ppl-cb" value="${name.replace(/"/g,'&quot;')}" ${selectedPeople.includes(name)?'checked':''}>${name}</label>`).join('');
+}
+
+function rRM(data){const e=!!data;const yr=S.selectedYear;const d=data||{name:'',memo:'',date:'',status:'미예약',vendor:'',total:0,currency:'KRW',fxRate:0,category:'항공',people:[],tripId:S.selectedTrip||(S.trips.find(t=>t.year===yr)?.id||''),private:false};const trips=S.trips.filter(t=>t.id!=='_init'&&t.year===yr);const cats=Object.keys(CI);const cur=d.currency||'KRW';
+return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>${e?'예약 수정':'새 예약'}</h3><div class="form-group"><label>여행</label><select id="r-trip" onchange="onTripChange()">${trips.map(t=>`<option value="${t.id}" ${d.tripId===t.id?'selected':''}>${t.emoji} ${t.name}</option>`).join('')}</select></div><div class="form-row"><div class="form-group"><label>항목명</label><input id="r-name" value="${d.name||''}" placeholder="항공 출발편"></div><div class="form-group"><label>카테고리</label><select id="r-cat">${cats.map(c=>`<option value="${c}" ${d.category===c?'selected':''}>${CI[c]} ${c}</option>`).join('')}</select></div></div><div class="form-group"><label>메모</label><input id="r-memo" value="${d.memo||''}" placeholder="예약번호, 위치 등"></div><div class="form-row"><div class="form-group"><label>상태</label><select id="r-st"><option value="미예약" ${d.status==='미예약'?'selected':''}>✕ 미예약</option><option value="정산필요" ${d.status==='정산필요'?'selected':''}>! 정산필요</option><option value="정산완료" ${d.status==='정산완료'?'selected':''}>✓ 정산완료</option></select></div><div class="form-group"><label>결제일자</label><input id="r-date" value="${d.date||''}" placeholder="2026/03/04"></div></div><div class="form-row-3"><div class="form-group"><label>통화</label><select id="r-cur" onchange="onCurChange()">${CURRENCIES.map(c=>`<option value="${c.code}" ${cur===c.code?'selected':''}>${c.code} (${c.symbol})</option>`).join('')}</select></div><div class="form-group"><label>금액</label><input id="r-tot" type="number" value="${d.total||0}" min="0" onchange="onAmtChange()"></div><div class="form-group"><label>예약처</label><input id="r-vnd" value="${d.vendor||''}" placeholder="아고다"></div></div><div id="fx-area">${cur!=='KRW'?`<div class="fx-rate-row">환율: 1 ${cur} = <input id="r-fx" type="number" step="0.01" value="${d.fxRate||''}" placeholder="자동" style="width:90px"> KRW <span style="color:var(--text-muted);font-size:11px">(비워두면 자동)</span></div><div class="fx-hint" id="fx-preview">${d.total?'≈ '+fmtKRW(toKRW(d.total,cur,d.fxRate)):''}</div>`:''}</div><div class="form-group"><label>결제자</label><div id="r-payer-wrap">${getPayerSelect(d.tripId||(trips[0]?.id||''),d.payer||'')}</div></div><div class="form-group"><label>해당인원</label><div id="r-ppl-members" class="member-checks-wrap">${getMemberChecks(d.tripId||(trips[0]?.id||''),d.people||[])}</div><input id="r-ppl-extra" value="${(()=>{const _t=S.trips.find(t=>t.id===(d.tripId||(trips[0]?.id||'')));const _m=Object.values(_t?.memberNames||{});return(d.people||[]).filter(p=>!_m.includes(p)).join(', ')})()}" placeholder="멤버 외 추가 인원 (쉼표 구분)" style="margin-top:6px;width:100%"></div><div class="form-group"><label class="private-row"><input type="checkbox" id="r-private" ${d.private?'checked':''}> 🔒 나만 보기</label></div><div class="modal-actions">${e?`<button class="btn-danger" onclick="delR('${data.id}');closeM()" style="margin-right:auto">삭제</button>`:''}<button class="btn-cancel" onclick="closeM()">취소</button><button class="btn-save" onclick="saveR(${e?`'${data.id}'`:'null'})">${e?'수정':'추가'}</button></div></div></div>`;}
+
+// === Currency UI helpers ===
+window.onCurChange=function(){
+  const cur=document.getElementById('r-cur').value;
+  const area=document.getElementById('fx-area');
+  const tot=parseFloat(document.getElementById('r-tot').value)||0;
+  if(cur==='KRW'){area.innerHTML='';}
+  else{
+    const autoRate=exchangeRates[cur]?(1/exchangeRates[cur]).toFixed(2):'';
+    area.innerHTML=`<div class="fx-rate-row">환율: 1 ${cur} = <input id="r-fx" type="number" step="0.01" value="" placeholder="${autoRate||'입력'}" style="width:90px" onchange="updateFxPreview()"> KRW <span style="color:var(--text-muted);font-size:11px">(비워두면 자동)</span></div><div class="fx-hint" id="fx-preview">${tot?'≈ '+fmtKRW(toKRW(tot,cur,0)):''}</div>`;
+  }
+};
+window.onAmtChange=function(){updateFxPreview();};
+window.updateFxPreview=function(){
+  const cur=document.getElementById('r-cur')?.value;
+  const tot=parseFloat(document.getElementById('r-tot')?.value)||0;
+  const fxEl=document.getElementById('r-fx');
+  const prev=document.getElementById('fx-preview');
+  if(!cur||cur==='KRW'||!prev)return;
+  const fx=fxEl?parseFloat(fxEl.value):0;
+  prev.textContent=tot?'≈ '+fmtKRW(toKRW(tot,cur,fx)):'';
+};
+
+// === Actions ===
+window.setF=(t,v)=>{if(t==='s')S.filterStatus=v;else S.filterCategory=v;render();};
+window.openTM=()=>{S.modal={type:'trip',data:null};render();};
+window.openRM=()=>{S.modal={type:'reservation',data:null};render();};
+window.editR=id=>{const r=S.reservations.find(x=>x.id===id);if(r){S.modal={type:'reservation',data:{...r}};render();}};
+window.closeM=()=>{S.modal=null;render();};
+
+window.saveT=async(eid)=>{const name=document.getElementById('m-name').value.trim();if(!name)return alert('이름을 입력해주세요');const d={name,dates:document.getElementById('m-dates').value.trim(),people:parseInt(document.getElementById('m-ppl').value)||1,emoji:document.getElementById('m-emo').value||'✈️'};if(eid){await tC().doc(eid).update(d);const i=S.trips.findIndex(t=>t.id===eid);if(i>=0)S.trips[i]={...S.trips[i],...d};}else await addTrip(d);closeM();};
+
+window.saveR=async(eid)=>{const name=document.getElementById('r-name').value.trim();if(!name)return alert('항목명을 입력해주세요');const cbPpl=[...document.querySelectorAll('input[name="r-ppl-cb"]:checked')].map(cb=>cb.value);const extraEl=document.getElementById('r-ppl-extra');const extraPpl=extraEl&&extraEl.value.trim()?extraEl.value.trim().split(',').map(s=>s.trim()).filter(Boolean):[];const people=[...new Set([...cbPpl,...extraPpl])];const total=parseFloat(document.getElementById('r-tot').value)||0;const currency=document.getElementById('r-cur').value;const fxEl=document.getElementById('r-fx');const fxRate=fxEl?parseFloat(fxEl.value)||0:0;const tripId=document.getElementById('r-trip').value;const tripYear=(S.trips.find(t=>t.id===tripId)||{}).year||S.selectedYear;const d={tripId,year:tripYear,name,memo:document.getElementById('r-memo').value.trim(),date:document.getElementById('r-date').value.trim(),status:document.getElementById('r-st').value,vendor:document.getElementById('r-vnd').value.trim(),total,currency,fxRate,category:document.getElementById('r-cat').value,people,perPerson:people.length?Math.round(toKRW(total,currency,fxRate)/people.length):0,payer:document.getElementById('r-payer')?.value||'',private:document.getElementById('r-private')?.checked||false};if(eid)await updR(eid,d);else await addR(d);closeM();};
+
+window.delTrip=delTrip;window.delR=delR;window.signIn=signIn;window.signOut=signOut;
+window.selT=id=>{S.selectedTrip=id;S.filterStatus='all';S.filterCategory='all';S.activeTab='budget';render();};
+window.setYear=yr=>{S.selectedYear=yr;S.selectedTrip=null;S.filterStatus='all';S.filterCategory='all';render();};
+window.openJoinM=()=>{S.modal={type:'join',data:null};render();};
+window.openMembersM=(tripId)=>{S.modal={type:'members',tripId};render();};
+window.openNicknameM=()=>{S.modal={type:'nickname'};render();};
+window.saveNickname=async()=>{
+  const newNick=document.getElementById('nick-input').value.trim();
+  if(!newNick)return alert('닉네임을 입력해주세요');
+  const uid=S.user.uid;const oldNick=myName();
+  if(oldNick===newNick){closeM();return;}
+  localStorage.setItem('nick_'+uid,newNick);
+  const b=db.batch();
+  // 여행 memberNames 업데이트
+  S.trips.filter(t=>t.members?.includes(uid)).forEach(t=>b.update(tC().doc(t.id),{[`memberNames.${uid}`]:newNick}));
+  // 예약 people + payer에서 옛 이름 → 새 이름
+  const resToFix=S.reservations.filter(r=>r.people?.includes(oldNick)||r.payer===oldNick);
+  resToFix.forEach(r=>{
+    const newPeople=(r.people||[]).map(p=>p===oldNick?newNick:p);
+    const krw=getKRW(r);
+    const upd={people:newPeople,perPerson:newPeople.length?Math.round(krw/newPeople.length):0};
+    if(r.payer===oldNick)upd.payer=newNick;
+    b.update(rC().doc(r.id),upd);
+  });
+  await b.commit();
+  // 로컬 상태 업데이트
+  S.trips=S.trips.map(t=>t.members?.includes(uid)?{...t,memberNames:{...t.memberNames,[uid]:newNick}}:t);
+  S.reservations=S.reservations.map(r=>{
+    const inPeople=r.people?.includes(oldNick);const inPayer=r.payer===oldNick;
+    if(!inPeople&&!inPayer)return r;
+    const newPeople=(r.people||[]).map(p=>p===oldNick?newNick:p);
+    const krw=getKRW(r);
+    return{...r,people:newPeople,perPerson:newPeople.length?Math.round(krw/newPeople.length):0,...(inPayer?{payer:newNick}:{})};
+  });
+  closeM();
+};
+window.leaveTrip=async(tripId)=>{
+  const uid=S.user.uid;const trip=S.trips.find(t=>t.id===tripId);if(!trip)return;
+  if(trip.owner===uid){alert('여행 생성자는 탈퇴할 수 없어요.\n여행을 삭제하려면 삭제 버튼을 이용해주세요.');return;}
+  if(!confirm(`"${trip.name}"에서 탈퇴할까요?`))return;
+  await tC().doc(tripId).update({members:firebase.firestore.FieldValue.arrayRemove(uid),[`memberNames.${uid}`]:firebase.firestore.FieldValue.delete()});
+  S.trips=S.trips.filter(t=>t.id!==tripId);
+  S.reservations=S.reservations.filter(r=>r.tripId!==tripId);
+  if(S.selectedTrip===tripId)S.selectedTrip=null;
+  closeM();
+};
+window.kickMember=async(tripId,targetUid)=>{
+  const uid=S.user.uid;const trip=S.trips.find(t=>t.id===tripId);
+  if(!trip||trip.owner!==uid)return;
+  const name=trip.memberNames?.[targetUid]||targetUid;
+  if(!confirm(`${name}님을 여행에서 추방할까요?`))return;
+  await tC().doc(tripId).update({members:firebase.firestore.FieldValue.arrayRemove(targetUid),[`memberNames.${targetUid}`]:firebase.firestore.FieldValue.delete()});
+  const i=S.trips.findIndex(t=>t.id===tripId);
+  if(i>=0){S.trips[i]={...S.trips[i],members:S.trips[i].members.filter(m=>m!==targetUid)};delete S.trips[i].memberNames[targetUid];}
+  render();
+};
+
+function rMembersM(tripId){
+  const trip=S.trips.find(t=>t.id===tripId);if(!trip)return'';
+  const uid=S.user.uid;const isOwner=trip.owner===uid;
+  const members=trip.members||[];const memberNames=trip.memberNames||{};
+  const rows=members.map(mUid=>{
+    const name=memberNames[mUid]||mUid;const isMe=mUid===uid;const isTripOwner=mUid===trip.owner;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border-light)"><div style="width:34px;height:34px;border-radius:50%;background:var(--bg-hover);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0">👤</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">${name}${isMe?` <span style="font-size:11px;color:var(--accent);font-weight:600">(나)</span>`:''}</div>${isTripOwner?`<div style="font-size:11px;color:var(--text-muted)">👑 생성자</div>`:''}</div><div style="display:flex;gap:5px">${isOwner?`<button class="detail-edit-btn" onclick="openRenameMemberM('${tripId}','${mUid}')">✎</button>`:''}${isOwner&&!isMe?`<button class="btn-danger" style="padding:3px 10px;font-size:12px" onclick="kickMember('${tripId}','${mUid}')">추방</button>`:''}${isMe&&!isOwner?`<button class="btn-danger" style="padding:3px 10px;font-size:12px" onclick="leaveTrip('${tripId}')">탈퇴</button>`:''}</div></div>`;
+  }).join('');
+  return`<div class="modal-overlay" onclick="if(event.target===this)closeM()"><div class="modal"><h3>👥 멤버 관리</h3><div style="margin-bottom:4px">${rows}</div>${!isOwner?`<button class="btn-danger" onclick="leaveTrip('${tripId}')" style="width:100%;margin-top:14px;padding:8px;justify-content:center;display:flex">이 여행 탈퇴하기</button>`:''}<div class="modal-actions" style="margin-top:12px"><button class="btn-cancel" onclick="closeM()">닫기</button></div></div></div>`;
+}
+window.openNameFixM=(prefill)=>{S.modal={type:'namefix',prefill:prefill||''};render();};
+window.openRenameMemberM=(tripId,targetUid)=>{S.modal={type:'rename-member',tripId,targetUid};render();};
+window.saveRenameMember=async(tripId,targetUid)=>{
+  const oldName=document.getElementById('rm-old').value.trim();
+  const newName=document.getElementById('rm-new').value.trim();
+  if(!newName)return alert('새 이름을 입력해주세요');
+  if(oldName===newName){closeM();return;}
+  const trip=S.trips.find(t=>t.id===tripId);if(!trip)return;
+  const b=db.batch();
+  const newMemberNames={...(trip.memberNames||{}),[targetUid]:newName};
+  b.update(tC().doc(tripId),{memberNames:newMemberNames});
+  const toFix=S.reservations.filter(r=>r.tripId===tripId&&((r.people&&r.people.includes(oldName))||(r.payer===oldName)));
+  for(const r of toFix){
+    const newPeople=(r.people||[]).map(p=>p===oldName?newName:p);
+    const krw=getKRW(r);
+    const upd={people:newPeople,perPerson:newPeople.length?Math.round(krw/newPeople.length):0};
+    if(r.payer===oldName)upd.payer=newName;
+    b.update(rC().doc(r.id),upd);
+  }
+  await b.commit();
+  const ti=S.trips.findIndex(t=>t.id===tripId);
+  if(ti>=0)S.trips[ti]={...S.trips[ti],memberNames:newMemberNames};
+  S.reservations=S.reservations.map(r=>{
+    if(r.tripId!==tripId)return r;
+    const inPeople=r.people?.includes(oldName);const inPayer=r.payer===oldName;
+    if(!inPeople&&!inPayer)return r;
+    const newPeople=(r.people||[]).map(p=>p===oldName?newName:p);
+    const krw=getKRW(r);
+    return{...r,people:newPeople,perPerson:newPeople.length?Math.round(krw/newPeople.length):0,...(inPayer?{payer:newName}:{})};
+  });
+  closeM();
+  render();
+};
+window.doNameFix=async()=>{
+  const oldName=document.getElementById('nf-old').value.trim();
+  const newName=document.getElementById('nf-new').value.trim();
+  if(!oldName)return alert('변경 전 이름을 입력해주세요');
+  if(!newName)return alert('변경 후 이름을 입력해주세요');
+  if(oldName===newName)return alert('변경 전/후 이름이 같습니다');
+  const toFix=S.reservations.filter(r=>(r.people&&r.people.includes(oldName))||(r.payer===oldName));
+  if(!toFix.length){alert(`"${oldName}"이 포함된 예약이 없습니다`);return;}
+  if(!confirm(`${toFix.length}건의 예약에서 "${oldName}" → "${newName}"으로 변경할까요?`))return;
+  const b=db.batch();
+  for(const r of toFix){
+    const newPeople=(r.people||[]).map(p=>p===oldName?newName:p);
+    const krw=getKRW(r);
+    const upd={people:newPeople,perPerson:newPeople.length?Math.round(krw/newPeople.length):0};
+    if(r.payer===oldName)upd.payer=newName;
+    b.update(rC().doc(r.id),upd);
+  }
+  await b.commit();
+  S.reservations=S.reservations.map(r=>{
+    const inPeople=r.people?.includes(oldName);const inPayer=r.payer===oldName;
+    if(!inPeople&&!inPayer)return r;
+    const newPeople=(r.people||[]).map(p=>p===oldName?newName:p);
+    const krw=getKRW(r);
+    return{...r,people:newPeople,perPerson:newPeople.length?Math.round(krw/newPeople.length):0,...(inPayer?{payer:newName}:{})};
+  });
+  closeM();
+  alert(`완료! ${toFix.length}건 변경됨`);
+};
+window.doJoin=async()=>{const code=document.getElementById('join-code').value.trim();if(!code)return;await joinByCode(code);await load();closeM();render();};
+window.copyInvite=(code,tripName)=>{if(!code){alert('초대 코드가 없습니다');return;}S.modal={type:'invite',code,tripName};render();};
+window.copyInviteUrl=(url)=>{navigator.clipboard?.writeText(url).then(()=>{const btn=event.target;const orig=btn.textContent;btn.textContent='복사됨 ✓';btn.style.background='#10b981';setTimeout(()=>{btn.textContent=orig;btn.style.background='';},1500);}).catch(()=>alert(url));};
+window.setTab=tab=>{S.activeTab=tab;render();};
+window.onTripChange=function(){const tripId=document.getElementById('r-trip').value;const el=document.getElementById('r-ppl-members');if(el)el.innerHTML=getMemberChecks(tripId,[]);const ex=document.getElementById('r-ppl-extra');if(ex)ex.value='';const pw=document.getElementById('r-payer-wrap');if(pw)pw.innerHTML=getPayerSelect(tripId,'');};
+window.openDetailModal=(type,idx,tripId)=>{S.modal={type:`detail-${type}`,idx:parseInt(idx),tripId};render();};
+window.saveDetail=async(type,idx,tripId)=>{
+  const trip=S.trips.find(t=>t.id===tripId);let item={};
+  if(type==='flight'){item={type:document.getElementById('fl-type').value,airline:document.getElementById('fl-airline').value.trim(),flightNo:document.getElementById('fl-no').value.trim(),duration:document.getElementById('fl-dur').value.trim(),from:document.getElementById('fl-from').value.trim(),fromDate:document.getElementById('fl-from-date').value||'',fromTime:document.getElementById('fl-from-time').value||'',to:document.getElementById('fl-to').value.trim(),toDate:document.getElementById('fl-to-date').value||'',toTime:document.getElementById('fl-to-time').value||'',notes:document.getElementById('fl-notes').value.trim()};}
+  else if(type==='hotel'){item={name:document.getElementById('ht-name').value.trim(),address:document.getElementById('ht-addr').value.trim(),checkIn:document.getElementById('ht-in').value,checkOut:document.getElementById('ht-out').value,mapUrl:document.getElementById('ht-map').value.trim()};}
+  else if(type==='car'){item={vendor:document.getElementById('car-vendor').value.trim(),carType:document.getElementById('car-type').value.trim(),pickupLocation:document.getElementById('car-loc').value.trim(),pickupDate:document.getElementById('car-pick-date').value||'',pickupTime:document.getElementById('car-pick-time').value||'',returnDate:document.getElementById('car-ret-date').value||'',returnTime:document.getElementById('car-ret-time').value||'',};}
+  const arr=[...(trip[type+'s']||[])];if(idx>=0)arr[idx]=item;else arr.push(item);
+  await tC().doc(tripId).update({[type+'s']:arr});
+  const i=S.trips.findIndex(t=>t.id===tripId);if(i>=0)S.trips[i]={...S.trips[i],[type+'s']:arr};
+  closeM();
+};
+window.deleteDetail=async(type,idx,tripId)=>{if(!confirm('삭제할까요?'))return;const trip=S.trips.find(t=>t.id===tripId);const arr=[...(trip[type+'s']||[])];arr.splice(idx,1);await tC().doc(tripId).update({[type+'s']:arr});const i=S.trips.findIndex(t=>t.id===tripId);if(i>=0)S.trips[i]={...S.trips[i],[type+'s']:arr};closeM();};
+window.saveNotes=async(tripId,btn)=>{const el=document.getElementById('trip-notes-ta');if(!el)return;const notes=el.value;await tC().doc(tripId).update({notes});const i=S.trips.findIndex(t=>t.id===tripId);if(i>=0)S.trips[i].notes=notes;S.notesEditing=false;render();};
+window.toggleNotesEdit=(editing)=>{S.notesEditing=editing;render();};
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /trips/{tripId} {
+      // 주의: 로그인한 누구나 read 허용 — 초대 코드(inviteCode) 검색 때문에 필수
+      // 이 규칙을 "members 포함 시만 read"로 바꾸면 joinByCode() 가 깨짐
+      allow read: if request.auth != null;
+      allow create: if request.auth != null
+        && request.auth.uid in request.resource.data.members;
+      allow update: if request.auth != null && (
+        request.auth.uid in resource.data.members ||
+        (
+          request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['members', 'memberNames']) &&
+          request.auth.uid in request.resource.data.members
+        )
+      );
+      allow delete: if request.auth != null
+        && request.auth.uid == resource.data.owner;
+    }
+
+    match /reservations/{resId} {
+      allow read: if request.auth != null && (
+        resource.data.createdBy == request.auth.uid ||
+        request.auth.uid in get(/databases/$(database)/documents/trips/$(resource.data.tripId)).data.members
+      );
+      allow create: if request.auth != null
+        && request.auth.uid in get(/databases/$(database)/documents/trips/$(request.resource.data.tripId)).data.members;
+      allow update, delete: if request.auth != null && (
+        resource.data.createdBy == request.auth.uid ||
+        request.auth.uid in get(/databases/$(database)/documents/trips/$(resource.data.tripId)).data.members
+      );
+    }
+
+    match /places/{placeId} {
+      allow read: if request.auth != null && (
+        resource.data.createdBy == request.auth.uid ||
+        request.auth.uid in get(/databases/$(database)/documents/trips/$(resource.data.tripId)).data.members
+      );
+      allow create: if request.auth != null
+        && request.auth.uid in get(/databases/$(database)/documents/trips/$(request.resource.data.tripId)).data.members;
+      allow update, delete: if request.auth != null && (
+        resource.data.createdBy == request.auth.uid ||
+        request.auth.uid in get(/databases/$(database)/documents/trips/$(resource.data.tripId)).data.members
+      );
+    }
+
+  }
+}

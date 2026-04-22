@@ -53,9 +53,40 @@
 
 ## 배포
 
+### 자동 배포 (GitHub Actions)
+`main` 브랜치에 푸시하면 GitHub Actions가 자동으로 Firebase Hosting에 배포합니다.
+
+- 워크플로우: `.github/workflows/firebase-hosting-merge.yml`
+- PR 생성 시: `firebase-hosting-pull-request.yml` 로 프리뷰 URL 자동 생성
+- 배포 상태 확인: [GitHub Actions 탭](https://github.com/heaeat/this-year-my-trip/actions)
+
+```bash
+git push origin main  # 자동 배포됨
+```
+
+### 수동 배포
+긴급하거나 GitHub을 거치지 않고 바로 배포하고 싶을 때:
+
 ```bash
 firebase deploy --only hosting
 ```
+
+### 자동 배포 재설정
+서비스 계정이 만료되거나 다른 저장소로 이전할 때:
+
+```bash
+firebase init hosting:github
+```
+- GitHub repo 입력
+- Build script 설정: **No** (단일 HTML이라 빌드 불필요)
+- Auto-deploy on merge: **Yes**
+- 브랜치: `main`
+
+이 명령이 GCP 서비스 계정 + GitHub Secret (`FIREBASE_SERVICE_ACCOUNT_THIS_YEAR_MY_TRIP`) 을 자동 생성합니다.
+
+---
+
+## 프로젝트 구조
 
 `index.html` 하나에 CSS, JS가 모두 인라인으로 포함되어 있습니다.
 

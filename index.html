@@ -910,9 +910,8 @@ function rTabNotes(trip){
 function rSettleBreakdown(name,items){
   const mine=items.filter(r=>(r.people||[]).includes(name)||r.payer===name);
   if(!mine.length)return`<div style="padding:14px 16px;font-size:12px;color:var(--text-muted);background:var(--bg-hover)">분담 내역이 없어요</div>`;
-  const sorted=[...mine].sort((a,b)=>(a.date||'').localeCompare(b.date||''));
   let totalOwe=0,totalRecv=0;
-  const rows=sorted.map(r=>{
+  function itemRow(r){
     const krw=getKRW(r);const ppl=r.people||[];const inPpl=ppl.includes(name);
     const share=inPpl&&ppl.length?Math.round(krw/ppl.length):0;
     const isPayer=r.payer===name;
@@ -921,12 +920,19 @@ function rSettleBreakdown(name,items){
     if(isPayer&&inPpl){const recv=krw-share;totalRecv+=recv;detail=`내가 결제 · ${ppl.length}명 분담`;amtTxt=`+${fmtKRW(recv)}`;amtColor='var(--green)';}
     else if(isPayer){totalRecv+=krw;detail=`내가 결제 · ${ppl.length||0}명 분담`;amtTxt=`+${fmtKRW(krw)}`;amtColor='var(--green)';}
     else{totalOwe+=share;detail=`${r.payer||'?'}이(가) 결제 · ${ppl.length}명 분담`;amtTxt=`-${fmtKRW(share)}`;amtColor='var(--red)';}
-    const meta=[fmtDate(r.date),r.vendor].filter(Boolean).join(' · ');
-    return`<div style="display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--border-light);background:var(--bg-sidebar)"><div class="res-card-icon ${cc}" style="width:28px;height:28px;font-size:13px;border-radius:7px">${CI[r.category]||'📦'}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div><div style="font-size:11px;color:var(--text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${detail}${meta?' · '+meta:''}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums">${fmtKRW(krw)}</div><div style="font-size:13px;font-weight:700;color:${amtColor};font-variant-numeric:tabular-nums">${amtTxt}</div></div></div>`;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:1px solid var(--border-light);background:var(--bg-sidebar)"><div class="res-card-icon ${cc}" style="width:28px;height:28px;font-size:13px;border-radius:7px">${CI[r.category]||'📦'}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.name}</div><div style="font-size:11px;color:var(--text-muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${detail}${r.vendor?' · '+r.vendor:''}</div></div><div style="text-align:right;flex-shrink:0"><div style="font-size:12px;color:var(--text-muted);font-variant-numeric:tabular-nums">${fmtKRW(krw)}</div><div style="font-size:13px;font-weight:700;color:${amtColor};font-variant-numeric:tabular-nums">${amtTxt}</div></div></div>`;
+  }
+  const groups={};mine.forEach(r=>{const d=r.date||'_none';(groups[d]=groups[d]||[]).push(r);});
+  const keys=Object.keys(groups).sort((a,b)=>{if(a==='_none')return 1;if(b==='_none')return-1;return a.replace(/\//g,'-').localeCompare(b.replace(/\//g,'-'));});
+  const body=keys.map(d=>{
+    const label=d==='_none'?'날짜 미정':fmtDate(d);
+    const sub=groups[d].reduce((a,r)=>{const krw=getKRW(r);const ppl=r.people||[];const inPpl=ppl.includes(name);const share=inPpl&&ppl.length?Math.round(krw/ppl.length):0;const isPayer=r.payer===name;if(isPayer&&inPpl)return a+(krw-share);if(isPayer)return a+krw;return a-share;},0);
+    const subColor=sub>=0?'var(--green)':'var(--red)';
+    return`<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 16px;background:var(--bg-hover);border-bottom:1px solid var(--border-light);font-size:11px;font-weight:600;color:var(--text-sub);letter-spacing:.3px"><span>${label} · ${groups[d].length}건</span><span style="color:${subColor};font-variant-numeric:tabular-nums">${sub>=0?'+':''}${fmtKRW(sub)}</span></div>${groups[d].map(itemRow).join('')}`;
   }).join('');
   const net=totalRecv-totalOwe;
   const summary=`<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 16px;background:var(--bg-sidebar);border-bottom:1px solid var(--border-light);font-size:12px"><span style="color:var(--text-muted)">합계 ${mine.length}건</span><span style="display:flex;gap:10px"><span style="color:var(--green);font-weight:600">+${fmtKRW(totalRecv)}</span><span style="color:var(--red);font-weight:600">-${fmtKRW(totalOwe)}</span><span style="color:${net>=0?'var(--green)':'var(--red)'};font-weight:700">${net>=0?'+':''}${fmtKRW(net)}</span></span></div>`;
-  return`<div>${rows}${summary}</div>`;
+  return`<div>${body}${summary}</div>`;
 }
 
 function calcSettlement(res){

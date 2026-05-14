@@ -108,18 +108,6 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
 .bar-row .bar-fill.me{background:var(--green)}
 .bar-row .bar-value{font-size:12px;font-weight:600;color:var(--text-sub);font-variant-numeric:tabular-nums;white-space:nowrap}
 .bar-row .bar-pct{font-size:11px;color:var(--text-muted);margin-left:4px}
-.donut-row{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
-.donut-wrap{flex-shrink:0}
-.donut-svg{width:150px;height:150px}
-.donut-c1{font-size:13px;font-weight:700;fill:var(--text)}
-.donut-c2{font-size:8px;fill:var(--text-muted)}
-.donut-legend{flex:1;min-width:200px;display:flex;flex-direction:column;gap:5px}
-.legend-row{display:grid;grid-template-columns:10px auto 1fr auto auto;align-items:center;gap:8px;font-size:13px}
-.legend-dot{width:10px;height:10px;border-radius:3px}
-.legend-emoji{font-size:14px;line-height:1}
-.legend-name{color:var(--text);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.legend-val{font-size:12px;font-weight:600;color:var(--text-sub);font-variant-numeric:tabular-nums;white-space:nowrap}
-.legend-pct{font-size:11px;color:var(--text-muted);min-width:32px;text-align:right}
 
 .res-table{border:1px solid var(--border-light);border-radius:8px;overflow:hidden}
 .res-card{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border-bottom:1px solid var(--border-light);cursor:pointer;transition:background .08s;position:relative}
@@ -269,12 +257,6 @@ button{font-family:inherit;cursor:pointer}input,select,textarea{font-family:inhe
   .bar-row{grid-template-columns:90px 1fr auto;gap:7px;font-size:12px;margin-bottom:6px}
   .bar-row .bar-label .bar-name{font-size:12px}
   .bar-row .bar-value{font-size:11px}
-  .donut-row{gap:14px}
-  .donut-svg{width:120px;height:120px}
-  .donut-legend{min-width:160px;gap:4px}
-  .legend-row{font-size:12px;gap:6px}
-  .legend-val{font-size:11px}
-  .legend-pct{font-size:10px;min-width:28px}
 
   .filters{gap:3px;margin-bottom:12px}
   .filter-btn{font-size:12px;padding:4px 10px}
@@ -728,16 +710,11 @@ function rReport(res,sel){
   if(!S.reportOpen){
     return`<div class="report-section"><button class="report-toggle" onclick="toggleReport()">📊 <span>여행 보고서 보기</span> <span class="arrow">▼</span></button></div>`;
   }
-  const CAT_COL={"항공":"#60a5fa","숙소":"#f59e0b","렌터카":"#34d399","교통":"#a78bfa","식비":"#f87171","관광":"#fb923c","쇼핑":"#ec4899","다이빙":"#06b6d4","usim":"#9ca3af"};
-  const FALLBACK=["#6b7280","#84cc16","#14b8a6","#8b5cf6","#eab308","#ef4444"];
   const cats={};res.forEach(r=>{const c=r.category||'기타';cats[c]=(cats[c]||0)+getKRW(r);});
-  const catSorted=Object.entries(cats).sort((a,b)=>b[1]-a[1]);
-  const colorOf={};let fbi=0;catSorted.forEach(([c])=>{colorOf[c]=CAT_COL[c]||FALLBACK[fbi++%FALLBACK.length];});
-  const r=42,circ=2*Math.PI*r;let acc=0;
-  const donutSegs=catSorted.map(([c,v])=>{const pct=v/total;const len=circ*pct;const rot=-90+(acc/total)*360;acc+=v;return`<circle cx="50" cy="50" r="${r}" fill="none" stroke="${colorOf[c]}" stroke-width="16" stroke-dasharray="${len.toFixed(3)} ${(circ-len).toFixed(3)}" transform="rotate(${rot.toFixed(2)} 50 50)"/>`;}).join('');
-  const donut=`<svg viewBox="0 0 100 100" class="donut-svg">${donutSegs}<text x="50" y="46" text-anchor="middle" class="donut-c1">${catSorted.length}개</text><text x="50" y="58" text-anchor="middle" class="donut-c2">카테고리</text></svg>`;
-  const legend=catSorted.map(([c,v])=>{const pct=Math.round(v/total*100);return`<div class="legend-row"><span class="legend-dot" style="background:${colorOf[c]}"></span><span class="legend-emoji">${CI[c]||'📦'}</span><span class="legend-name">${c}</span><span class="legend-val">${fmtKRW(v)}</span><span class="legend-pct">${pct}%</span></div>`;}).join('');
-  const catRows=`<div class="donut-row"><div class="donut-wrap">${donut}</div><div class="donut-legend">${legend}</div></div>`;
+  const catRows=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([c,v])=>{
+    const pct=Math.round(v/total*100);
+    return`<div class="bar-row"><div class="bar-label"><span class="bar-emoji">${CI[c]||'📦'}</span><span class="bar-name">${c}</span></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div><div class="bar-value">${fmtKRW(v)}<span class="bar-pct">${pct}%</span></div></div>`;
+  }).join('');
   const memberTotals={};res.forEach(r=>{const ppl=r.people||[];if(!ppl.length)return;const share=Math.round(getKRW(r)/ppl.length);ppl.forEach(p=>{memberTotals[p]=(memberTotals[p]||0)+share;});});
   const memberSum=Object.values(memberTotals).reduce((a,b)=>a+b,0);
   const memberRows=Object.entries(memberTotals).sort((a,b)=>b[1]-a[1]).map(([name,v])=>{

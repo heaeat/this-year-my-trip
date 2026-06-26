@@ -17,10 +17,13 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_THIS_YEAR_MY_TRIP }}
           channelId: live
           projectId: this-year-my-trip
-      - name: Deploy Firestore rules
-        uses: w9jds/firebase-action@master
+      - uses: actions/setup-node@v4
         with:
-          args: deploy --only firestore:rules
+          node-version: '20'
+      - name: Deploy Firestore rules
         env:
-          GCP_SA_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_THIS_YEAR_MY_TRIP }}
-          PROJECT_ID: this-year-my-trip
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_THIS_YEAR_MY_TRIP }}
+        run: |
+          echo "$FIREBASE_SA" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          npx -y firebase-tools@latest deploy --only firestore:rules --project this-year-my-trip --non-interactive

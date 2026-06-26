@@ -1315,16 +1315,24 @@ function tripDateCtx(){
 
 window.triggerTripleImport=()=>{
   if(!S.selectedTrip){alert('여행을 먼저 선택해주세요');return;}
-  const input=document.createElement('input');input.type='file';input.accept='image/*';
+  const input=document.createElement('input');input.type='file';input.accept='image/*';input.multiple=true;
   input.onchange=async(e)=>{
-    const file=e.target.files[0];if(!file)return;
-    showImportLoading('📋 트리플 캡쳐 분석 중...');
+    const files=[...e.target.files];if(!files.length)return;
+    const ctx=tripDateCtx();
+    const allItems=[];let done=0;
+    showImportLoading(`📋 트리플 ${files.length}장 분석 중... (0/${files.length})`);
     try{
-      const{b64,mediaType}=await fileToBase64(file);
-      const result=await parseImageWithGemini(b64,mediaType,'triple',tripDateCtx());
+      for(const file of files){
+        const{b64,mediaType}=await fileToBase64(file);
+        const r=await parseImageWithGemini(b64,mediaType,'triple',ctx);
+        done++;showImportLoading(`📋 트리플 ${files.length}장 분석 중... (${done}/${files.length})`);
+        if(Array.isArray(r))allItems.push(...r);
+      }
       hideImportLoading();
-      if(!Array.isArray(result)||!result.length){alert('항목을 찾지 못했어요. 다른 캡쳐로 시도해보세요.');return;}
-      openModal({type:'triple-import',items:result.map(it=>({...it,date:normalizeDate(it.date)}))});
+      if(!allItems.length){alert('항목을 찾지 못했어요. 다른 캡쳐로 시도해보세요.');return;}
+      const items=allItems.map(it=>({...it,date:normalizeDate(it.date)}));
+      const title=files.length>1?`📋 트리플 ${files.length}장 일괄 추가`:'📋 트리플 일괄 추가';
+      openModal({type:'triple-import',items,title});
     }catch(err){hideImportLoading();alert('파싱 오류: '+err.message);}
   };
   input.click();
